@@ -1,18 +1,18 @@
-# Welcome to p5.js
+# Selamat datang di p5.js
 
-You have downloaded the complete p5.js library ZIP file, yay!
+Anda telah mengunduh file ZIP pustaka p5.js lengkap, hore!
 
-# Run Server
+# Menjalankan Server
 npx serve .
 
-# Contents of the p5 folder
+# Isi folder p5
 
-* p5.js file
-* p5.min.js file
-* addons folder
+* file p5.js
+* file p5.min.js
+* folder addons
   * p5.sound.js
   * p5.sound.min.js
-* empty-example folder
+* folder empty-example
   * index.html
   * p5.js
   * p5.sound.js
@@ -20,50 +20,48 @@ npx serve .
 
 ## p5.js
 
-This file stores the complete p5.js library. It is easy to read by humans, so feel free to open it and explore its contents. It also has a friendly error system, which helps new programmers with common user errors.
+File ini memuat pustaka p5.js secara lengkap. File ini mudah dibaca oleh manusia, jadi jangan ragu untuk membukanya dan menjelajahi isinya. File ini juga memiliki sistem pesan kesalahan yang ramah pengguna, yang membantu pemrogram pemula mengatasi kesalahan umum yang sering terjadi.
 
 ## p5.min.js
 
-This file is a minified version of the p5.js file. It is a lighter version, with the same functionalities, but smaller file size. This minified version is harder to read for humans, and does not include the friendly error system.
+File ini adalah versi *minified* (yang telah diperkecil ukurannya) dari file p5.js. Ini adalah versi yang lebih ringan dengan fungsionalitas yang sama, namun memiliki ukuran file yang lebih kecil. Versi *minified* ini lebih sulit dibaca oleh manusia dan tidak menyertakan sistem pesan kesalahan yang ramah pengguna tersebut.
 
-## addons folder
+## folder addons
 
-The addons folder includes additional p5.js related libraries, in both original versions and minified versions.
+Folder addons berisi pustaka tambahan yang terkait dengan p5.js, baik dalam versi asli maupun versi *minified*.
 
 ### p5.sound.js, p5.sound.min.js
 
-p5.sound extends p5.js with Web Audio functionality including audio input, playback, analysis, and synthesis.
+p5.sound memperluas kemampuan p5.js dengan fungsionalitas Web Audio, termasuk input audio, pemutaran (*playback*), analisis, dan sintesis.
 
-## empty-example folder
+## folder empty-example
 
-This is an empty example of a website. The folder includes the file for the website, index.html, the p5.js library, other related p5.js libraries, and a template starting point for your p5.js sketch, called sketch.js.
+Ini adalah contoh struktur situs web dasar yang kosong. Folder ini berisi file utama situs web (index.html), pustaka p5.js, pustaka p5.js terkait lainnya, serta templat awal untuk sketsa p5.js Anda yang bernama sketch.js.
 
 ### index.html
 
-index.html is a template for an HTML file. This index.html first imports the libraries included in the folder (p5.js, p5.sound.js) then loads and executes the file sketch.js which is where you can write your own code.
+index.html adalah templat untuk file HTML. File index.html ini pertama-tama mengimpor pustaka yang ada di dalam folder (p5.js, p5.sound.js), kemudian memuat dan menjalankan file sketch.js, tempat Anda dapat menulis kode Anda sendiri. ### sketch.js
 
-### sketch.js
-
-The sketch.js is a template for the p5.js sketch, with the functions setup() and draw() that you can complete.
+sketch.js adalah templat untuk sketsa p5.js, yang memuat fungsi setup() dan draw() untuk Anda lengkapi.
 
 ## README.txt
 
-This README file formatted with Markdown :)
+Berkas README ini diformat menggunakan Markdown :)
 
-# What's next?
+# Apa langkah selanjutnya?
 
-If you need more information to help get you started, please refer to our website:  
-https://p5js.org/tutorials/get-started/ and https://p5js.org/tutorials/
+Jika Anda memerlukan informasi lebih lanjut untuk memulai, silakan kunjungi situs web kami:  
+https://p5js.org/tutorials/get-started/ dan https://p5js.org/tutorials/
 
-An online reference to the p5.js library is available here:  
+Referensi daring untuk pustaka p5.js tersedia di sini:  
 https://p5js.org/reference/
 
-In order to run your website (including the empty-example), you need to enable a local server, please see this tutorial in our wiki:  
+Untuk menjalankan situs web Anda (termasuk contoh kosong/empty-example), Anda perlu mengaktifkan server lokal; silakan lihat tutorial ini di wiki kami:  
 https://github.com/processing/p5.js/wiki/Local-server
 
-p5.js is a community and p5.js is built by contributions. If you want to learn more about us, visit:  
+p5.js adalah sebuah komunitas dan dibangun melalui kontribusi. Jika Anda ingin mengetahui lebih lanjut tentang kami, kunjungi:  
 https://p5js.org/community/
 
-# License
+# Lisensi
 
-The p5.js library is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, version 2.1.
+Pustaka p5.js adalah perangkat lunak bebas; Anda dapat mendistribusikan ulang dan/atau memodifikasinya berdasarkan ketentuan GNU Lesser General Public License sebagaimana diterbitkan oleh Free Software Foundation, versi 2.1.
