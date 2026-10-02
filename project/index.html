@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulasi Keselamatan Kendaraan - Fisika Komputasi</title>
+  <script src="../p5.min.js"></script>
+  <style>
+    :root {
+      --bg-main: #0b0f19;
+      --bg-card: rgba(18, 24, 38, 0.85);
+      --bg-card-hover: rgba(26, 35, 55, 0.95);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --primary: #38bdf8;
+      --primary-hover: #0ea5e9;
+      --accent: #818cf8;
+      --success: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* TOP HEADER */
+    header {
+      background: linear-gradient(180deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.4) 100%);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-color);
+      padding: 14px 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-title-box {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .header-icon {
+      font-size: 28px;
+      background: linear-gradient(135deg, #0284c7, #6366f1);
+      padding: 8px 12px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(2, 132, 199, 0.3);
+    }
+
+    .header-title {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      background: linear-gradient(90deg, #ffffff, #cbd5e1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .header-subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      color: var(--primary);
+      transition: all 0.3s ease;
+    }
+
+    .status-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: currentColor;
+      box-shadow: 0 0 8px currentColor;
+    }
+
+    /* MAIN CONTAINER */
+    .app-layout {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 20px;
+      padding: 20px 28px;
+      flex: 1;
+      max-width: 1600px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    @media (max-width: 1050px) {
+      .app-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* CARD STYLING */
+    .panel-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card-title {
+      font-size: 15px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-title span.icon {
+      font-size: 17px;
+    }
+
+    /* CONTROLS SIDEBAR */
+    .control-group {
+      margin-bottom: 18px;
+    }
+
+    .control-label-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 7px;
+    }
+
+    .control-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: #e2e8f0;
+    }
+
+    .control-value-badge {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--primary);
+      font-family: ui-monospace, monospace;
+      background: rgba(56, 189, 248, 0.12);
+      padding: 2px 8px;
+      border-radius: 6px;
+      border: 1px solid rgba(56, 189, 248, 0.25);
+    }
+
+    .range-input {
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: #334155;
+      outline: none;
+      -webkit-appearance: none;
+      cursor: pointer;
+    }
+
+    .range-input::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #38bdf8, #2563eb);
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.6);
+      cursor: pointer;
+      transition: transform 0.15s ease;
+    }
+
+    .range-input::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+
+    .range-hints {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: #64748b;
+      margin-top: 4px;
+    }
+
+    /* ACTION BUTTONS */
+    .button-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 10px;
+      margin-bottom: 16px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: white;
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+      grid-column: span 2;
+      font-size: 15px;
+      padding: 13px;
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #34d399, #10b981);
+      box-shadow: 0 6px 18px rgba(16, 185, 129, 0.45);
+    }
+
+    .btn-secondary {
+      background: #1e293b;
+      color: #e2e8f0;
+      border: 1px solid var(--border-color);
+    }
+
+    .btn-secondary:hover {
+      background: #334155;
+      color: white;
+    }
+
+    /* PRESETS */
+    .preset-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+
+    .preset-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .btn-preset {
+      background: rgba(30, 41, 59, 0.6);
+      border: 1px solid var(--border-color);
+      color: #cbd5e1;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .btn-preset:hover {
+      background: rgba(56, 189, 248, 0.12);
+      border-color: rgba(56, 189, 248, 0.4);
+      color: #38bdf8;
+    }
+
+    .btn-preset.active {
+      background: rgba(56, 189, 248, 0.18);
+      border-color: rgba(56, 189, 248, 0.7);
+      color: #38bdf8;
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.2);
+      font-weight: 600;
+    }
+
+    .btn-preset.active span:first-child {
+      font-weight: 700;
+    }
+
+    .select-input {
+      width: 100%;
+      background: #1e293b;
+      color: #f1f5f9;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 9px 12px;
+      font-size: 13px;
+      outline: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+
+    .select-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+    }
+
+    .select-input option {
+      background: #0f172a;
+      color: #f1f5f9;
+    }
+
+    /* VISUALIZATION & DATA COLUMN */
+    .main-content {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* CANVAS CARD */
+    .canvas-card {
+      position: relative;
+      border-radius: 16px;
+      overflow: hidden;
+      background: #000;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
+    }
+
+    #canvas-container {
+      width: 100%;
+      height: 420px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+    }
+
+    #canvas-container canvas {
+      display: block;
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    /* HUD OVERLAY ON CANVAS */
+    .hud-overlay {
+      position: absolute;
+      top: 14px;
+      left: 16px;
+      right: 16px;
+      display: flex;
+      justify-content: space-between;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .hud-chip {
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 6px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .hud-chip strong {
+      font-family: ui-monospace, monospace;
+      color: var(--primary);
+      font-size: 14px;
+    }
+
+    .hud-chip.alert-box {
+      font-weight: 700;
+    }
+
+    /* METRIC CARDS ROW */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+    }
+
+    @media (max-width: 1200px) {
+      .metrics-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 600px) {
+      .metrics-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .metric-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: border-color 0.2s ease;
+    }
+
+    .metric-card:hover {
+      border-color: rgba(56, 189, 248, 0.3);
+    }
+
+    .metric-header {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .metric-value {
+      font-size: 22px;
+      font-weight: 800;
+      font-family: ui-monospace, monospace;
+      color: #f8fafc;
+      letter-spacing: -0.5px;
+    }
+
+    .metric-sub {
+      font-size: 11px;
+      color: #64748b;
+      margin-top: 6px;
+    }
+
+    /* GRAPH & FORMULA ROW */
+    .analysis-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 1050px) {
+      .analysis-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .graph-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .graph-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .graph-legend {
+      display: flex;
+      gap: 16px;
+      font-size: 12px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .legend-color {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+    }
+
+    #forceGraphCanvas {
+      width: 100%;
+      height: 190px;
+      background: #090d16;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    /* FORMULA & EDUCATIONAL CARD */
+    .edu-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 20px;
+      font-size: 13px;
+      color: #cbd5e1;
+      line-height: 1.6;
+    }
+
+    .edu-formula {
+      background: #090d16;
+      border-left: 3px solid var(--primary);
+      padding: 8px 12px;
+      margin: 10px 0;
+      border-radius: 0 8px 8px 0;
+      font-family: ui-monospace, monospace;
+      font-size: 13px;
+      color: #38bdf8;
+    }
+
+    .edu-point {
+      margin-top: 8px;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .edu-point span {
+      color: var(--success);
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <div class="header-title-box">
+      <div class="header-icon">🚗</div>
+      <div>
+        <h1 class="header-title">Simulasi Keselamatan Kendaraan</h1>
+        <p class="header-subtitle">Fisika Komputasi • Hukum Newton, Energi Kinetik, Momentum, Impuls & Airbag</p>
+      </div>
+    </div>
+    <div class="status-badge" id="statusBadge">
+      <div class="status-dot"></div>
+      <span id="statusText">Siap Dijalankan</span>
+    </div>
+  </header>
+
+  <!-- APP LAYOUT -->
+  <div class="app-layout">
+
+    <!-- LEFT: CONTROLS PANEL -->
+    <aside class="panel-card">
+      <div class="card-title">
+        <span class="icon">⚙️</span> Parameter Simulasi
+      </div>
+
+      <!-- VEHICLE OBJECT SELECTOR -->
+      <div class="control-group">
+        <div class="control-label-row">
+          <label class="control-label" for="vehicleSelect">Model Objek 3D</label>
+          <span class="control-value-badge" id="vehicleBadge">Mobil Kota</span>
+        </div>
+        <select class="select-input" id="vehicleSelect">
+          <option value="city">🚗 Mobil Kota (Hatchback)</option>
+          <option value="rain">🌧️ Sedan Hujan (Jalan Basah)</option>
+          <option value="sport">⚡ Mobil Sport / Supercar</option>
+          <option value="truck">🚚 Truk Muatan Berat (6 Roda)</option>
+        </select>
+      </div>
+
+      <!-- SPEED SLIDER -->
+      <div class="control-group">
+        <div class="control-label-row">
+          <label class="control-label" for="speedInput">Kecepatan Awal (v₀)</label>
+          <span class="control-value-badge" id="speedBadge">60 km/jam</span>
+        </div>
+        <input type="range" class="range-input" id="speedInput" min="20" max="140" value="60" step="2">
+        <div class="range-hints">
+          <span>20 km/jam (5.6 m/s)</span>
+          <span>140 km/jam (38.9 m/s)</span>
+        </div>
+      </div>
+
+      <!-- MASS SLIDER -->
+      <div class="control-group">
+        <div class="control-label-row">
+          <label class="control-label" for="massInput">Massa Kendaraan (m)</label>
+          <span class="control-value-badge" id="massBadge">1000 kg</span>
+        </div>
+        <input type="range" class="range-input" id="massInput" min="500" max="2500" value="1000" step="50">
+        <div class="range-hints">
+          <span>500 kg (Mobil Kecil)</span>
+          <span>2500 kg (SUV/Truk)</span>
+        </div>
+      </div>
+
+      <!-- FRICTION COEFFICIENT (MU) -->
+      <div class="control-group">
+        <div class="control-label-row">
+          <label class="control-label" for="muInput">Koefisien Gesek Jalan (μ)</label>
+          <span class="control-value-badge" id="muBadge">0.60</span>
+        </div>
+        <input type="range" class="range-input" id="muInput" min="0.10" max="1.00" value="0.60" step="0.05">
+        <div class="range-hints">
+          <span>0.1 (Es/Sangat Licin)</span>
+          <span>0.8 (Aspal Kering)</span>
+        </div>
+      </div>
+
+      <!-- DISTANCE TO OBSTACLE -->
+      <div class="control-group">
+        <div class="control-label-row">
+          <label class="control-label" for="distInput">Jarak ke Dinding (D)</label>
+          <span class="control-value-badge" id="distBadge">35 meter</span>
+        </div>
+        <input type="range" class="range-input" id="distInput" min="15" max="60" value="35" step="1">
+        <div class="range-hints">
+          <span>15 m (Dekat)</span>
+          <span>60 m (Jauh)</span>
+        </div>
+      </div>
+
+      <!-- AIRBAG DURATION SLIDER -->
+      <div class="control-group">
+        <div class="control-label-row">
+          <label class="control-label" for="airbagInput">Waktu Tumbukan Airbag (Δt)</label>
+          <span class="control-value-badge" id="airbagBadge">0.20 detik</span>
+        </div>
+        <input type="range" class="range-input" id="airbagInput" min="0.08" max="0.45" value="0.20" step="0.01">
+        <div class="range-hints">
+          <span>0.08 s (Keras)</span>
+          <span>0.45 s (Sangat Redam)</span>
+        </div>
+      </div>
+
+      <!-- ACTION BUTTONS -->
+      <div class="button-grid">
+        <button class="btn btn-primary" id="btnStart">
+          <span id="btnStartIcon">▶</span> <span id="btnStartText">Mulai Simulasi</span>
+        </button>
+        <button class="btn-secondary btn" id="btnPause">⏸ Jeda</button>
+        <button class="btn-secondary btn" id="btnReset">↻ Reset</button>
+      </div>
+
+      <!-- PRESETS -->
+      <div class="preset-title">Skenario Siap Pakai</div>
+      <div class="preset-buttons">
+        <button class="btn-preset active" data-preset="city" onclick="applyPreset(50, 1000, 0.75, 35, 0.20, 'city')">
+          <span>🚗 Mobil Kota (Aspal Kering - Aman)</span>
+          <span>➔</span>
+        </button>
+        <button class="btn-preset" data-preset="rain" onclick="applyPreset(70, 1200, 0.30, 35, 0.20, 'rain')">
+          <span>🌧️ Hujan Deras (Licin - Tabrakan)</span>
+          <span>➔</span>
+        </button>
+        <button class="btn-preset" data-preset="sport" onclick="applyPreset(110, 1500, 0.65, 35, 0.12, 'sport')">
+          <span>⚡ Kecepatan Tinggi (Benturan Keras)</span>
+          <span>➔</span>
+        </button>
+        <button class="btn-preset" data-preset="truck" onclick="applyPreset(80, 2200, 0.50, 35, 0.30, 'truck')">
+          <span>🚚 Truk Muatan Berat</span>
+          <span>➔</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- RIGHT: MAIN VISUALIZATION & DATA -->
+    <main class="main-content">
+
+      <!-- 3D CANVAS VIEWPORT -->
+      <div class="canvas-card">
+        <div class="hud-overlay">
+          <div class="hud-chip">
+            <span>Objek:</span> <strong id="hudVehicleName">🚗 Mobil Kota</strong>
+          </div>
+          <div class="hud-chip">
+            <span>Kecepatan:</span> <strong id="hudSpeed">60.0 km/jam</strong>
+          </div>
+          <div class="hud-chip">
+            <span>Posisi:</span> <strong id="hudPos">0.0 m</strong> / <span id="hudTarget">35.0 m</span>
+          </div>
+          <div class="hud-chip">
+            <span>Pengereman (a):</span> <strong id="hudAccel">-5.88 m/s²</strong>
+          </div>
+          <div class="hud-chip alert-box" id="hudAlert" style="display:none;">
+            <span id="hudAlertText">TUMBUKAN!</span>
+          </div>
+        </div>
+
+        <!-- P5.js CANVAS MOUNT POINT -->
+        <div id="canvas-container"></div>
+      </div>
+
+      <!-- 4 SCIENTIFIC METRIC CARDS -->
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-header">
+            <span>Energi Kinetik Awal</span>
+            <span>⚡ Ek</span>
+          </div>
+          <div class="metric-value" id="valKinetic">138.9 kJ</div>
+          <div class="metric-sub">Ek = ½ · m · v₀²</div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-header">
+            <span>Momentum Awal</span>
+            <span>🎯 p</span>
+          </div>
+          <div class="metric-value" id="valMomentum">16,667 kg·m/s</div>
+          <div class="metric-sub">p = m · v₀</div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-header">
+            <span>Jarak Pengereman Teoritis</span>
+            <span>📏 s_henti</span>
+          </div>
+          <div class="metric-value" id="valBrakeDist">23.6 m</div>
+          <div class="metric-sub" id="valBrakeStatus">Aman: Berhenti sebelum dinding (35 m)</div>
+        </div>
+
+        <div class="metric-card" style="border-color: rgba(16, 185, 129, 0.4);">
+          <div class="metric-header">
+            <span>Reduksi Gaya Airbag</span>
+            <span>🛡️ Efektivitas</span>
+          </div>
+          <div class="metric-value" style="color: var(--success);" id="valReduction">75.0 %</div>
+          <div class="metric-sub" id="valForceCompare">F_airbag: 83.3 kN vs F_tanpa: 333.3 kN</div>
+        </div>
+      </div>
+
+      <!-- FORCE GRAPH & PHYSICS CONCEPT -->
+      <div class="analysis-grid">
+        <!-- GRAPH CARD -->
+        <div class="graph-card">
+          <div class="graph-header">
+            <div class="card-title" style="margin-bottom:0;">
+              <span class="icon">📈</span> Kurva Impuls: Gaya vs Waktu F(t)
+            </div>
+            <div class="graph-legend">
+              <div class="legend-item">
+                <div class="legend-color" style="background:#ef4444;"></div>
+                <span>Tanpa Airbag (Δt = 0.05s)</span>
+              </div>
+              <div class="legend-item">
+                <div class="legend-color" style="background:#38bdf8;"></div>
+                <span>Dengan Airbag (Teredam)</span>
+              </div>
+            </div>
+          </div>
+          <canvas id="forceGraphCanvas" width="700" height="200"></canvas>
+        </div>
+
+        <!-- FORMULA & CONCEPT CARD -->
+        <div class="edu-card">
+          <div class="card-title">
+            <span class="icon">💡</span> Teorema Impuls-Momentum
+          </div>
+          <div class="edu-formula">
+            I = Δp = F_rata-rata · Δt
+          </div>
+          <p>
+            Ketika mobil mengalami tabrakan, seluruh momentum kendaraan harus diredam menjadi nol ($\Delta p$).
+          </p>
+          <div class="edu-point">
+            <span>✔</span>
+            <p><strong>Fungsi Airbag:</strong> Memperpanjang durasi tumbukan ($\Delta t$), sehingga gaya rata-rata ($F$) yang mengenai penumpang menurun drastis.</p>
+          </div>
+          <div class="edu-point">
+            <span>✔</span>
+            <p><strong>Luas Kurva Sama:</strong> Luas area di bawah kedua grafik sama besarnya, yaitu total impuls $I = \int F(t) dt$.</p>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- SCRIPT SIMULASI -->
+  <script src="project.js"></script>
+</body>
+</html>
