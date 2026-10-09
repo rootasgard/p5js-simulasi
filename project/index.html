@@ -94,6 +94,30 @@
       transition: all 0.3s ease;
     }
 
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header-navigation {
+      color: #cbd5e1;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 8px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .header-navigation:hover {
+      color: #fff;
+      border-color: rgba(56, 189, 248, 0.45);
+      background: rgba(56, 189, 248, 0.1);
+    }
+
     .status-dot {
       width: 9px;
       height: 9px;
@@ -564,9 +588,12 @@
         <p class="header-subtitle">Fisika Komputasi • Hukum Newton, Energi Kinetik, Momentum, Impuls & Airbag</p>
       </div>
     </div>
-    <div class="status-badge" id="statusBadge">
-      <div class="status-dot"></div>
-      <span id="statusText">Siap Dijalankan</span>
+    <div class="header-actions">
+      <a class="header-navigation" href="./biliar.html">🎱 Simulasi Billiard 2D</a>
+      <div class="status-badge" id="statusBadge">
+        <div class="status-dot"></div>
+        <span id="statusText">Siap Dijalankan</span>
+      </div>
     </div>
   </header>
 

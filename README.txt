@@ -2,9 +2,6 @@
 
 Anda telah mengunduh file ZIP pustaka p5.js lengkap, hore!
 
-# Menjalankan Server
-npx serve .
-
 # Isi folder p5
 
 * file p5.js
@@ -12,7 +9,6 @@ npx serve .
 * folder addons
   * p5.sound.js
   * p5.sound.min.js
-* folder empty-example
   * index.html
   * p5.js
   * p5.sound.js
@@ -20,7 +16,7 @@ npx serve .
 
 ## p5.js
 
-File ini memuat pustaka p5.js secara lengkap. File ini mudah dibaca oleh manusia, jadi jangan ragu untuk membukanya dan menjelajahi isinya. File ini juga memiliki sistem pesan kesalahan yang ramah pengguna, yang membantu pemrogram pemula mengatasi kesalahan umum yang sering terjadi.
+File ini memuat pustaka p5.js secara lengkap. File ini mudah dibaca, jadi jangan ragu untuk membukanya dan menjelajahi isinya. File ini juga memiliki sistem pesan kesalahan yang ramah pengguna, yang membantu pemrogram pemula mengatasi kesalahan umum yang sering terjadi.
 
 ## p5.min.js
 
