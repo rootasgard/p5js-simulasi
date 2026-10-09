@@ -155,14 +155,15 @@ function drawPoolTable() {
     h: felt.h + felt.h * 0.15
   };
   noStroke();
-  drawingContext.save();
+  push();
   drawingContext.shadowColor = "rgba(0, 0, 0, 0.55)";
   drawingContext.shadowBlur = 30;
   drawingContext.shadowOffsetY = 13;
   fill("#07100f");
   rect(outer.x, outer.y, outer.w, outer.h, 15);
-  drawingContext.restore();
+  pop();
 
+  push();
   const wood = drawingContext.createLinearGradient(outer.x, outer.y, outer.x + outer.w, outer.y + outer.h);
   wood.addColorStop(0, "#745334");
   wood.addColorStop(0.22, "#bd8c51");
@@ -173,20 +174,23 @@ function drawPoolTable() {
   drawingContext.beginPath();
   drawingContext.roundRect(outer.x, outer.y, outer.w, outer.h, 15);
   drawingContext.fill();
+  pop();
 
   stroke("rgba(255, 223, 166, 0.25)");
   strokeWeight(1);
   noFill();
   rect(outer.x + 4, outer.y + 4, outer.w - 8, outer.h - 8, 12);
 
+  push();
   const cloth = drawingContext.createLinearGradient(felt.x, felt.y, felt.x + felt.w, felt.y + felt.h);
   cloth.addColorStop(0, "#176b56");
   cloth.addColorStop(0.48, "#10533f");
   cloth.addColorStop(1, "#0b4436");
   drawingContext.fillStyle = cloth;
   drawingContext.fillRect(felt.x, felt.y, felt.w, felt.h);
+  pop();
 
-  drawingContext.save();
+  push();
   drawingContext.beginPath();
   drawingContext.rect(felt.x, felt.y, felt.w, felt.h);
   drawingContext.clip();
@@ -195,7 +199,7 @@ function drawPoolTable() {
   for (let x = felt.x - felt.h; x < felt.x + felt.w; x += 9) {
     line(x, felt.y, x + felt.h, felt.y + felt.h);
   }
-  drawingContext.restore();
+  pop();
 
   noFill();
   stroke("rgba(191, 255, 218, 0.11)");
@@ -237,13 +241,13 @@ function drawPockets() {
     [felt.x + felt.w, felt.y + felt.h]
   ];
   for (const [x, y] of pockets) {
-    drawingContext.save();
+    push();
     drawingContext.shadowColor = "rgba(0, 0, 0, 0.55)";
     drawingContext.shadowBlur = 9;
     noStroke();
     fill("#070b0e");
     circle(x, y, pocketRadius * 2);
-    drawingContext.restore();
+    pop();
     noFill();
     stroke("rgba(223, 185, 126, 0.42)");
     strokeWeight(2);
@@ -267,12 +271,12 @@ function drawAimGuide() {
   const direction = aimDirection();
   const endX = cueBall.x + direction.x * felt.w * 0.25;
   const endY = cueBall.y + direction.y * felt.w * 0.25;
-  drawingContext.save();
+  push();
   drawingContext.setLineDash([5, 7]);
   stroke("rgba(83, 215, 242, 0.45)");
   strokeWeight(1.5);
   line(cueBall.x + direction.x * ballRadius, cueBall.y + direction.y * ballRadius, endX, endY);
-  drawingContext.restore();
+  pop();
   noStroke();
   fill("rgba(83, 215, 242, 0.68)");
   circle(endX, endY, 4);
@@ -293,7 +297,7 @@ function drawCueStick() {
   const tipWidth = ballRadius * 0.12;
   const buttWidth = ballRadius * 0.38;
 
-  drawingContext.save();
+  push();
   drawingContext.shadowColor = "rgba(0, 0, 0, 0.36)";
   drawingContext.shadowBlur = 7;
   drawingContext.shadowOffsetY = 3;
@@ -305,7 +309,7 @@ function drawCueStick() {
   vertex(tip.x - perpendicular.x * tipWidth, tip.y - perpendicular.y * tipWidth);
   vertex(tip.x + perpendicular.x * tipWidth, tip.y + perpendicular.y * tipWidth);
   endShape(CLOSE);
-  drawingContext.restore();
+  pop();
 
   stroke("#f2d5a2");
   strokeWeight(max(1, ballRadius * 0.11));
@@ -322,16 +326,16 @@ function drawCueStick() {
 
 function drawBall(ball, kind) {
   const r = ballRadius;
-  drawingContext.save();
+  push();
   drawingContext.shadowColor = "rgba(0, 0, 0, 0.46)";
   drawingContext.shadowBlur = r * 0.8;
   drawingContext.shadowOffsetY = r * 0.43;
   noStroke();
   fill("#071a17");
   circle(ball.x + r * 0.08, ball.y + r * 0.15, r * 2.04);
-  drawingContext.restore();
+  pop();
 
-  drawingContext.save();
+  push();
   const gradient = drawingContext.createRadialGradient(
     ball.x - r * 0.33, ball.y - r * 0.4, r * 0.04, ball.x, ball.y, r * 1.18
   );
@@ -348,7 +352,7 @@ function drawBall(ball, kind) {
   drawingContext.beginPath();
   drawingContext.arc(ball.x, ball.y, r, 0, TWO_PI);
   drawingContext.fill();
-  drawingContext.restore();
+  pop();
 
   noStroke();
   if (kind === "target") {
@@ -382,7 +386,7 @@ function drawMotionTrails() {
     if (speed < 20) continue;
     const direction = { x: ball.vx / speed, y: ball.vy / speed };
     const length = min(felt.w * 0.13, speed * 0.075);
-    drawingContext.save();
+    push();
     const gradient = drawingContext.createLinearGradient(
       ball.x - direction.x * length, ball.y - direction.y * length, ball.x, ball.y
     );
@@ -395,7 +399,7 @@ function drawMotionTrails() {
     drawingContext.moveTo(ball.x - direction.x * length, ball.y - direction.y * length);
     drawingContext.lineTo(ball.x - direction.x * ballRadius, ball.y - direction.y * ballRadius);
     drawingContext.stroke();
-    drawingContext.restore();
+    pop();
   }
 }
 
@@ -418,7 +422,7 @@ function drawVelocityArrow(x, y, vx, vy, color, maximumLength) {
   const length = constrain(30 + speed * 10, 30, maximumLength);
   const endX = x + (vx / speed) * length;
   const endY = y + (vy / speed) * length;
-  drawingContext.save();
+  push();
   drawingContext.shadowColor = color;
   drawingContext.shadowBlur = 8;
   stroke(color);
@@ -431,7 +435,7 @@ function drawVelocityArrow(x, y, vx, vy, color, maximumLength) {
   rotate(atan2(vy, vx));
   triangle(0, 0, -ballRadius * 0.7, -ballRadius * 0.4, -ballRadius * 0.7, ballRadius * 0.4);
   pop();
-  drawingContext.restore();
+  pop();
 }
 
 function drawTableLabels() {
