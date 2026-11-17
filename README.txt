@@ -1,4 +1,5 @@
 # Selamat datang di p5.js
+python -m http.server 8000
 
 Anda telah mengunduh file ZIP pustaka p5.js lengkap, hore!
 
