@@ -1,15 +1,1413 @@
 <!DOCTYPE html>
 <html lang="id">
-
 <head>
   <meta charset="utf-8">
-  <meta http-equiv="refresh" content="0; url=./project/">
-  <title>Mengarahkan ke Simulasi...</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <meta name="description" content="Simulasi Keselamatan Pengereman Kendaraan Berbasis Fisika Komputasi (GLBB, Gesekan, dan Impuls Airbag).">
+  <title>Simulasi Keselamatan Kendaraan - Fisika Komputasi</title>
+  <script src="p5.min.js"></script>
+  <script>
+    if (typeof p5 === 'undefined') {
+      document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js"><\/script>');
+    }
+  </script>
+  <style>
+    :root {
+      --bg: #090d16;
+      --surface: #0f172a;
+      --surface-elevated: #162036;
+      --surface-hover: #1e293b;
+      --border: rgba(255, 255, 255, 0.08);
+      --border-strong: rgba(255, 255, 255, 0.16);
+      --text-1: #f8fafc;
+      --text-2: #94a3b8;
+      --text-3: #64748b;
+      --primary: #38bdf8;
+      --primary-hover: #0ea5e9;
+      --success: #10b981;
+      --success-surface: rgba(16, 185, 129, 0.1);
+      --success-border: rgba(16, 185, 129, 0.3);
+      --danger: #ef4444;
+      --danger-surface: rgba(239, 68, 68, 0.1);
+      --danger-border: rgba(239, 68, 68, 0.3);
+      --warning: #f59e0b;
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+    }
+
+    /* MODE TERANG (SIANG HARI) */
+    [data-theme="light"] {
+      --bg: #edf2f7;
+      --surface: #ffffff;
+      --surface-elevated: #f8fafc;
+      --surface-hover: #e2e8f0;
+      --border: rgba(15, 23, 42, 0.09);
+      --border-strong: rgba(15, 23, 42, 0.18);
+      --text-1: #0f172a;
+      --text-2: #475569;
+      --text-3: #64748b;
+      --primary: #0284c7;
+      --primary-hover: #0369a1;
+      --success: #059669;
+      --success-surface: rgba(5, 150, 105, 0.08);
+      --success-border: rgba(5, 150, 105, 0.25);
+      --danger: #dc2626;
+      --danger-surface: rgba(220, 38, 38, 0.08);
+      --danger-border: rgba(220, 38, 38, 0.25);
+      --warning: #d97706;
+    }
+
+    [data-theme="light"] .main-stage {
+      background: var(--bg);
+    }
+
+    [data-theme="light"] .hud-block {
+      background: rgba(255, 255, 255, 0.94);
+      border: 1px solid rgba(15, 23, 42, 0.12);
+      color: var(--text-2);
+      box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    }
+
+    [data-theme="light"] .verdict-banner {
+      background: rgba(255, 255, 255, 0.96);
+      border-top: 1px solid var(--border);
+      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.04);
+    }
+
+    [data-theme="light"] .verdict-tag {
+      background: rgba(15, 23, 42, 0.06);
+      color: var(--text-2);
+    }
+
+    [data-theme="light"] .right-toolbar {
+      background: rgba(255, 255, 255, 0.96);
+      border-color: rgba(15, 23, 42, 0.14);
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.08);
+    }
+
+    [data-theme="light"] .toolbar-toggle-btn {
+      background: rgba(255, 255, 255, 0.96);
+      border-color: rgba(15, 23, 42, 0.14);
+      color: var(--text-2);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+    }
+
+    [data-theme="light"] .param-drawer {
+      background: rgba(255, 255, 255, 0.98);
+      border-top: 1px solid rgba(15, 23, 42, 0.14);
+      box-shadow: 0 -12px 36px rgba(0, 0, 0, 0.08);
+    }
+
+    [data-theme="light"] .drawer-backdrop {
+      background: rgba(15, 23, 42, 0.35);
+    }
+
+    [data-theme="light"] .modal-backdrop {
+      background: rgba(15, 23, 42, 0.45);
+    }
+
+    [data-theme="light"] .modal-box {
+      box-shadow: 0 20px 48px rgba(0, 0, 0, 0.12);
+    }
+
+    [data-theme="light"] #forceGraphCanvas {
+      background: #f8fafc;
+      border-color: rgba(15, 23, 42, 0.12);
+    }
+
+    [data-theme="light"] .table-scroll {
+      background: #ffffff;
+      border-color: var(--border);
+    }
+
+    [data-theme="light"] #trialTable th {
+      background: #f1f5f9;
+      color: #475569;
+    }
+
+    [data-theme="light"] #trialTable td {
+      color: #1e293b;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      height: 100dvh;
+      overflow: hidden;
+      background-color: var(--bg);
+      color: var(--text-1);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* 1. HEADER (COMPACT) */
+    header {
+      height: 50px;
+      flex-shrink: 0;
+      background: var(--surface);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 40;
+      transition: background 0.2s ease, border-color 0.2s ease;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .theme-toggle-btn {
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      color: var(--text-2);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 5px 10px;
+      border-radius: var(--radius-sm);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .theme-toggle-btn:hover {
+      background: var(--surface-hover);
+      color: var(--text-1);
+      border-color: var(--primary);
+    }
+
+    /* Icon visibility depending on active theme */
+    [data-theme="light"] .theme-toggle-btn .icon-sun {
+      display: none;
+    }
+    [data-theme="light"] .theme-toggle-btn .icon-moon {
+      display: inline-block;
+    }
+    :root:not([data-theme="light"]) .theme-toggle-btn .icon-moon {
+      display: none;
+    }
+    :root:not([data-theme="light"]) .theme-toggle-btn .icon-sun {
+      display: inline-block;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: var(--radius-sm);
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--primary);
+    }
+
+    .brand-title {
+      font-size: clamp(14px, 2.2vw, 16px);
+      font-weight: 700;
+      color: var(--text-1);
+      letter-spacing: -0.3px;
+    }
+
+    .brand-sub {
+      font-size: 11px;
+      color: var(--text-3);
+    }
+
+    @media (max-width: 600px) {
+      .brand-sub {
+        display: none;
+      }
+    }
+
+    .status-pill {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 5px 10px;
+      border-radius: var(--radius-sm);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      color: var(--primary);
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    /* 2. MAIN SIMULATION STAGE (CANVAS ABOVE NAVBAR) */
+    .main-stage {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      background: #000;
+    }
+
+    #canvas-container {
+      width: 100%;
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      touch-action: pan-y;
+    }
+
+    #canvas-container canvas {
+      display: block;
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    /* TOP HUD TELEMETRY */
+    .hud-bar {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      right: 76px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      pointer-events: none;
+      gap: 10px;
+      z-index: 20;
+    }
+
+    .hud-block {
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 5px 12px;
+      border-radius: var(--radius-sm);
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 12px;
+      color: var(--text-2);
+      flex-wrap: wrap;
+    }
+
+    .hud-item {
+      display: flex;
+      align-items: baseline;
+      gap: 5px;
+    }
+
+    .hud-val {
+      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+      font-weight: 700;
+      font-size: 12px;
+      color: var(--text-1);
+    }
+
+    .hud-val.speed {
+      color: var(--primary);
+    }
+
+    @media (max-width: 680px) {
+      .hud-bar {
+        flex-direction: column;
+        gap: 6px;
+        right: 64px;
+      }
+      .hud-block {
+        gap: 8px;
+        padding: 4px 8px;
+        font-size: 11px;
+      }
+    }
+
+    /* VERDICT BANNER (FLOWCHART DECISION) */
+    .verdict-banner {
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(8px);
+      border-top: 1px solid var(--border);
+      padding: 8px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      font-size: 12px;
+      z-index: 15;
+      flex-shrink: 0;
+    }
+
+    .verdict-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .verdict-tag {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 2px 7px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-2);
+    }
+
+    .verdict-text {
+      font-weight: 600;
+      color: var(--text-1);
+    }
+
+    .verdict-math {
+      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+      font-size: 11px;
+      color: var(--text-2);
+    }
+
+    /* 3. RIGHT TOOLBAR (COLLAPSIBLE / MODAL TRIGGERS) */
+    .right-toolbar-container {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      right: 14px;
+      z-index: 25;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .right-toolbar {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      background: rgba(15, 23, 42, 0.94);
+      backdrop-filter: blur(14px);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-md);
+      padding: 6px;
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.5);
+      transition: max-width 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+                  opacity 0.2s ease,
+                  padding 0.25s ease,
+                  transform 0.25s ease;
+      max-width: 200px;
+      opacity: 1;
+      transform: translateX(0);
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    .right-toolbar.collapsed {
+      max-width: 0;
+      opacity: 0;
+      padding: 0;
+      border: none;
+      transform: translateX(8px);
+      pointer-events: none;
+    }
+
+    .toolbar-toggle-btn {
+      background: rgba(15, 23, 42, 0.94);
+      border: 1px solid var(--border-strong);
+      color: var(--text-2);
+      width: 34px;
+      height: 34px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.35);
+      flex-shrink: 0;
+    }
+
+    .toolbar-toggle-btn:hover {
+      color: var(--text-1);
+      background: var(--surface-hover);
+      border-color: var(--primary);
+    }
+
+    .toolbar-toggle-btn.active {
+      color: var(--primary);
+      border-color: var(--primary);
+      background: rgba(56, 189, 248, 0.14);
+    }
+
+    .toolbar-btn {
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      color: var(--text-2);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 7px 10px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+      min-height: 34px;
+    }
+
+    .toolbar-btn:hover {
+      background: var(--surface-hover);
+      color: var(--text-1);
+      border-color: var(--primary);
+    }
+
+    .toolbar-btn.active {
+      background: rgba(56, 189, 248, 0.15);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    /* 4. BOTTOM NAVBAR (CONTROLS & PARAMETER DRAWER TOGGLE) */
+    .bottom-nav {
+      height: 58px;
+      flex-shrink: 0;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 0 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      z-index: 35;
+      position: relative;
+    }
+
+    .nav-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-center {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      overflow-x: auto;
+      padding: 4px 0;
+    }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.15s ease;
+      min-height: 38px;
+      font-family: inherit;
+      white-space: nowrap;
+    }
+
+    .btn-main {
+      background: #0284c7;
+      color: #fff;
+    }
+
+    .btn-main:hover {
+      background: #0369a1;
+    }
+
+    .btn-sub {
+      background: var(--surface-elevated);
+      color: var(--text-2);
+      border: 1px solid var(--border);
+    }
+
+    .btn-sub:hover {
+      background: var(--surface-hover);
+      color: var(--text-1);
+      border-color: var(--border-strong);
+    }
+
+    .pill-btn {
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      color: var(--text-2);
+      font-size: 11px;
+      font-weight: 500;
+      padding: 6px 10px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      min-height: 32px;
+      display: inline-flex;
+      align-items: center;
+      white-space: nowrap;
+    }
+
+    .pill-btn:hover {
+      background: var(--surface-hover);
+      color: var(--text-1);
+      border-color: var(--border-strong);
+    }
+
+    .pill-btn.active {
+      background: rgba(56, 189, 248, 0.15);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .btn-params-toggle {
+      background: var(--surface-elevated);
+      border: 1px solid var(--border-strong);
+      color: var(--text-1);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 8px 14px;
+      border-radius: var(--radius-sm);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      min-height: 38px;
+    }
+
+    .btn-params-toggle:hover {
+      background: var(--surface-hover);
+      border-color: var(--primary);
+    }
+
+    .btn-params-toggle.open {
+      background: rgba(56, 189, 248, 0.15);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .chevron-icon {
+      transition: transform 0.2s ease;
+    }
+
+    .btn-params-toggle.open .chevron-icon {
+      transform: rotate(180deg);
+    }
+
+    @media (max-width: 860px) {
+      .nav-center {
+        display: none;
+      }
+    }
+
+    @media (max-width: 500px) {
+      .bottom-nav {
+        padding: 0 10px;
+      }
+      .btn {
+        padding: 7px 10px;
+        font-size: 11px;
+      }
+      .btn-params-toggle span {
+        display: none;
+      }
+    }
+
+    /* 5. PARAMETER CONFIGURATION DRAWER (BOTTOM SHEET) */
+    .drawer-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(2px);
+      z-index: 44;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+
+    .drawer-backdrop.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .param-drawer {
+      position: fixed;
+      bottom: 58px;
+      left: 0;
+      right: 0;
+      max-height: calc(85vh - 58px);
+      background: rgba(15, 23, 42, 0.98);
+      backdrop-filter: blur(16px);
+      border-top: 1px solid var(--border-strong);
+      box-shadow: 0 -12px 36px rgba(0, 0, 0, 0.6);
+      z-index: 45;
+      display: flex;
+      flex-direction: column;
+      transform: translateY(110%);
+      opacity: 0;
+      pointer-events: none;
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+      overflow: hidden;
+    }
+
+    .param-drawer.open {
+      transform: translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .drawer-header {
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--surface-elevated);
+      flex-shrink: 0;
+    }
+
+    .drawer-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-1);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .drawer-close {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-2);
+      width: 28px;
+      height: 28px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .drawer-close:hover {
+      color: var(--text-1);
+      background: var(--surface-hover);
+    }
+
+    .drawer-body {
+      padding: 18px 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .controls-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 14px;
+    }
+
+    .control-item {
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .control-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-size: 12px;
+    }
+
+    .control-name {
+      font-weight: 600;
+      color: var(--text-1);
+    }
+
+    .control-val {
+      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+      font-size: 11px;
+      color: var(--primary);
+      font-weight: 700;
+    }
+
+    .range-input {
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: var(--surface-hover);
+      outline: none;
+      accent-color: var(--primary);
+      cursor: pointer;
+    }
+
+    .select-input {
+      width: 100%;
+      background: var(--surface-hover);
+      border: 1px solid var(--border);
+      color: var(--text-1);
+      padding: 7px 10px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    /* TELEMETRY ROW INSIDE DRAWER */
+    .telemetry-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px;
+      border-top: 1px solid var(--border);
+      padding-top: 14px;
+    }
+
+    .tile {
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .tile-label {
+      font-size: 11px;
+      color: var(--text-3);
+    }
+
+    .tile-value {
+      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-1);
+    }
+
+    .tile-sub {
+      font-size: 10px;
+      color: var(--text-2);
+    }
+
+    /* 6. MODAL DIALOGS (RESULTS / FLOWCHART) */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(8px);
+      z-index: 60;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
+    .modal-backdrop.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-box {
+      background: var(--surface);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-lg);
+      max-width: 820px;
+      width: 100%;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 20px 48px rgba(0, 0, 0, 0.6);
+    }
+
+    .modal-head {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--surface-elevated);
+      flex-shrink: 0;
+    }
+
+    .modal-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-1);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .modal-close {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-2);
+      width: 30px;
+      height: 30px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .modal-close:hover {
+      color: var(--text-1);
+      background: var(--surface-hover);
+    }
+
+    .modal-body {
+      padding: 18px 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* GRAPH CANVAS INSIDE RESULTS MODAL */
+    #forceGraphCanvas {
+      width: 100% !important;
+      height: 200px !important;
+      background: #070b13;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      display: block;
+    }
+
+    .flowchart-view {
+      background: #fff;
+      border-radius: var(--radius-sm);
+      padding: 14px;
+      display: flex;
+      justify-content: center;
+      overflow-x: auto;
+    }
+
+    .flowchart-view img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+    }
+  
+    /* TRIAL TABLE IN RESULTS MODAL */
+    .table-section {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      border-top: 1px solid var(--border);
+      padding-top: 14px;
+    }
+
+    .table-section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .table-section-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-1);
+    }
+
+    .btn-clear-table {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-3);
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .btn-clear-table:hover {
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+
+    .table-scroll {
+      overflow-x: auto;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+    }
+
+    #trialTable {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+    }
+
+    #trialTable th {
+      background: var(--surface-elevated);
+      color: var(--text-3);
+      font-weight: 600;
+      text-align: center;
+      padding: 7px 10px;
+      white-space: nowrap;
+      border-bottom: 1px solid var(--border);
+      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    }
+
+    #trialTable td {
+      text-align: center;
+      padding: 6px 10px;
+      color: var(--text-2);
+      border-bottom: 1px solid var(--border);
+      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+      white-space: nowrap;
+    }
+
+    #trialTable tr:last-child td {
+      border-bottom: none;
+    }
+
+    #trialTable tr:hover td {
+      background: var(--surface-elevated);
+      color: var(--text-1);
+    }
+
+    #trialTable td.result-safe {
+      color: var(--success);
+      font-weight: 700;
+    }
+
+    #trialTable td.result-crash {
+      color: var(--danger);
+      font-weight: 700;
+    }
+
+    #trialTable td.no-data {
+      color: var(--text-3);
+      font-style: italic;
+      text-align: center;
+      padding: 16px;
+    }
+  </style>
 </head>
+<body>
 
-<body style="background:#0b0f19; color:#fff; font-family:sans-serif; text-align:center; padding-top:20vh;">
-  <p>Membuka Simulasi Keselamatan Kendaraan...</p>
-  <p><a href="./project/" style="color:#38bdf8;">Klik di sini jika tidak beralih otomatis</a></p>
+  <!-- 1. COMPACT HEADER -->
+  <header>
+    <div class="brand">
+      <div class="brand-icon" aria-hidden="true">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/>
+          <circle cx="7" cy="17" r="2"/>
+          <path d="M9 17h6"/>
+          <circle cx="17" cy="17" r="2"/>
+        </svg>
+      </div>
+      <div>
+        <h1 class="brand-title">Simulasi Keselamatan Kendaraan</h1>
+        <p class="brand-sub">Fisika Komputasi • GLBB, Gesekan, dan Impuls Tumbukan</p>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <!-- TOMBOL TOGGLE MODE SIANG / MALAM -->
+      <button class="theme-toggle-btn" id="btnThemeToggle" title="Beralih ke Mode Siang" aria-label="Toggle Mode Siang atau Malam">
+        <svg class="icon-sun" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="5"/>
+          <line x1="12" y1="1" x2="12" y2="3"/>
+          <line x1="12" y1="21" x2="12" y2="23"/>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+          <line x1="1" y1="12" x2="3" y2="12"/>
+          <line x1="21" y1="12" x2="23" y2="12"/>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+        </svg>
+        <svg class="icon-moon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+        <span id="themeToggleText">Siang</span>
+      </button>
+
+      <div class="status-pill" id="statusBadge">
+        <div class="status-dot"></div>
+        <span id="statusText">Siap Dijalankan</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- 2. MAIN SIMULATION CANVAS (TERLETAK DI ATAS NAVBAR) -->
+  <main class="main-stage">
+    
+    <!-- HUD OVERLAY (TOP) -->
+    <div class="hud-bar">
+      <div class="hud-block">
+        <div class="hud-item">
+          <span>Model:</span>
+          <span class="hud-val" id="hudVehicleName">Mobil Kota</span>
+        </div>
+        <div class="hud-item">
+          <span>Kecepatan (<i>v</i>):</span>
+          <span class="hud-val speed" id="hudSpeed">60.0 km/jam</span>
+        </div>
+        <div class="hud-item">
+          <span>Waktu (<i>t</i>):</span>
+          <span class="hud-val" id="hudTime">0.00 s</span>
+        </div>
+      </div>
+
+      <div class="hud-block">
+        <div class="hud-item">
+          <span>Posisi (<i>x</i>):</span>
+          <span class="hud-val" id="hudPos">0.0 m</span>
+          <span style="color:var(--text-3);">/</span>
+          <span class="hud-val" id="hudTarget">35.0 m</span>
+        </div>
+        <div class="hud-item">
+          <span>Perlambatan (<i>a</i>):</span>
+          <span class="hud-val" id="hudAccel">-5.88 m/s<sup>2</sup></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT TOOLBAR (HASIL, GRAFIK, FLOWCHART - BISA DIBUKA/TUTUP) -->
+    <div class="right-toolbar-container" id="rightToolbarContainer">
+      <div class="right-toolbar" id="rightToolbar">
+        <!-- MODAL TRIGGER 1: HASIL & GRAFIK PENGUKURAN -->
+        <button class="toolbar-btn" id="btnOpenResultsModal" title="Buka Hasil, Grafik, dan Data Pengukuran">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="20" x2="18" y2="10"/>
+            <line x1="12" y1="20" x2="12" y2="4"/>
+            <line x1="6" y1="20" x2="6" y2="14"/>
+          </svg>
+          <span>Hasil & Grafik</span>
+        </button>
+
+        <!-- TOMBOL CATAT PERCOBAAN -->
+        <button class="toolbar-btn" id="btnRecordTrial" title="Catat hasil percobaan ke tabel data">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
+            <rect x="9" y="3" width="6" height="4" rx="1"/>
+            <line x1="9" y1="12" x2="15" y2="12"/>
+            <line x1="9" y1="16" x2="13" y2="16"/>
+          </svg>
+          <span>Catat</span>
+        </button>
+      </div>
+
+      <button class="toolbar-toggle-btn" id="btnToggleToolbar" title="Sembunyikan / Tampilkan Toolbar" aria-label="Toggle Toolbar Samping">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="3" y1="12" x2="21" y2="12"/>
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- P5.JS 3D WEBGL CANVAS -->
+    <div id="canvas-container"></div>
+
+    <!-- VERDICT BANNER FLOWCHART DECISION (s <= d) -->
+    <div class="verdict-banner" id="verdictBanner">
+      <div class="verdict-left">
+        <span class="verdict-tag" id="verdictTag">Kriteria: <i>s</i> &le; <i>d</i></span>
+        <span class="verdict-text" id="verdictText">Kondisi: <i>s</i> (23.6 m) &le; <i>d</i> (35.0 m) &rarr; Kendaraan Berhenti Selamat</span>
+      </div>
+      <div class="verdict-math" id="verdictMath">
+        <i>a</i> = 5.88 m/s<sup>2</sup> | <i>s</i> = 23.6 m | Sisa Jarak &Delta;<i>x</i> = 11.4 m
+      </div>
+    </div>
+
+  </main>
+
+  <!-- 3. BOTTOM NAVBAR -->
+  <nav class="bottom-nav">
+    <div class="nav-left">
+      <button class="btn btn-main" id="btnStart">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+          <polygon points="5 3 19 12 5 21 5 3"/>
+        </svg>
+        <span id="btnStartText">Mulai Simulasi</span>
+      </button>
+
+      <button class="btn btn-sub" id="btnPause">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+          <rect x="6" y="4" width="4" height="16"/>
+          <rect x="14" y="4" width="4" height="16"/>
+        </svg>
+        <span id="btnPauseText">Jeda</span>
+      </button>
+
+      <button class="btn btn-sub" id="btnReset">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+          <path d="M3 3v5h5"/>
+        </svg>
+        <span>Reset</span>
+      </button>
+    </div>
+
+    <div class="nav-center">
+      <button class="pill-btn active" data-preset="city" onclick="applyPreset(50, 1000, 0.75, 35, 0.20, 'city')">
+        Aspal Kering
+      </button>
+      <button class="pill-btn" data-preset="rain" onclick="applyPreset(70, 1200, 0.30, 35, 0.20, 'rain')">
+        Jalan Hujan
+      </button>
+      <button class="pill-btn" data-preset="sport" onclick="applyPreset(110, 1500, 0.65, 35, 0.12, 'sport')">
+        Kecepatan Tinggi
+      </button>
+      <button class="pill-btn" data-preset="truck" onclick="applyPreset(80, 2200, 0.50, 35, 0.30, 'truck')">
+        Truk Muatan
+      </button>
+    </div>
+
+    <div class="nav-right">
+      <button class="btn-params-toggle" id="btnToggleParams" aria-expanded="false" aria-controls="paramDrawer">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+        <span>Parameter Fisika</span>
+        <svg class="chevron-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="18 15 12 9 6 15"/>
+        </svg>
+      </button>
+    </div>
+  </nav>
+
+  <!-- 4. BOTTOM PARAMETER DRAWER (BISA DIBUKA / DITUTUP) -->
+  <div class="drawer-backdrop" id="paramBackdrop"></div>
+  <aside class="param-drawer" id="paramDrawer" aria-label="Panel Konfigurasi Parameter">
+    <div class="drawer-header">
+      <div class="drawer-title">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+        <span>Konfigurasi Parameter Fisika GLBB</span>
+      </div>
+      <button class="drawer-close" id="btnCloseParams" aria-label="Tutup Panel Parameter">✕</button>
+    </div>
+
+    <div class="drawer-body">
+      <div class="controls-grid">
+        <!-- MODEL -->
+        <div class="control-item">
+          <div class="control-head">
+            <label class="control-name" for="vehicleSelect">Model Kendaraan</label>
+            <span class="control-val" id="vehicleBadge">Mobil Kota</span>
+          </div>
+          <select class="select-input" id="vehicleSelect">
+            <option value="city">Mobil Kota (Hatchback)</option>
+            <option value="rain">Sedan Hujan (Jalan Basah)</option>
+            <option value="sport">Supercar Sport</option>
+            <option value="truck">Truk Muatan Berat (6 Roda)</option>
+          </select>
+        </div>
+
+        <!-- SPEED (v0) -->
+        <div class="control-item">
+          <div class="control-head">
+            <label class="control-name" for="speedInput">Kecepatan Awal (<i>v</i><sub>0</sub>)</label>
+            <span class="control-val" id="speedBadge">60 km/jam (16.7 m/s)</span>
+          </div>
+          <input type="range" class="range-input" id="speedInput" min="20" max="140" value="60" step="2">
+        </div>
+
+        <!-- FRICTION (mu) -->
+        <div class="control-item">
+          <div class="control-head">
+            <label class="control-name" for="muInput">Koefisien Gesek Kinetik (<i>&mu;</i>)</label>
+            <span class="control-val" id="muBadge">0.60</span>
+          </div>
+          <input type="range" class="range-input" id="muInput" min="0.10" max="1.00" value="0.60" step="0.05">
+        </div>
+
+        <!-- OBSTACLE DISTANCE (d) -->
+        <div class="control-item">
+          <div class="control-head">
+            <label class="control-name" for="distInput">Jarak Penghalang Perbaikan (<i>d</i>)</label>
+            <span class="control-val" id="distBadge">35 meter</span>
+          </div>
+          <input type="range" class="range-input" id="distInput" min="20" max="80" value="45" step="1">
+        </div>
+
+        <!-- VEHICLE MASS (m) -->
+        <div class="control-item">
+          <div class="control-head">
+            <label class="control-name" for="massInput">Massa Kendaraan (<i>m</i>)</label>
+            <span class="control-val" id="massBadge">1000 kg</span>
+          </div>
+          <input type="range" class="range-input" id="massInput" min="500" max="2500" value="1000" step="50">
+        </div>
+
+        <!-- AIRBAG DURATION (dt) -->
+        <div class="control-item">
+          <div class="control-head">
+            <label class="control-name" for="airbagInput">Waktu Deformasi Airbag (<i>&Delta;t</i>)</label>
+            <span class="control-val" id="airbagBadge">0.20 detik</span>
+          </div>
+          <input type="range" class="range-input" id="airbagInput" min="0.08" max="0.45" value="0.20" step="0.01">
+        </div>
+      </div>
+
+      <!-- TELEMETRY PREVIEW TILES -->
+      <div class="telemetry-row">
+        <div class="tile">
+          <span class="tile-label">Perlambatan Fisis (<i>a</i> = <i>&mu;g</i>)</span>
+          <span class="tile-value" id="valAccelMetric">5.88 m/s<sup>2</sup></span>
+          <span class="tile-sub">Gaya gesek: <i>f</i><sub>gesek</sub> = <i>&mu;mg</i></span>
+        </div>
+
+        <div class="tile">
+          <span class="tile-label">Jarak Pengereman (<i>s</i> = <i>v</i><sub>0</sub><sup>2</sup> / 2<i>a</i>)</span>
+          <span class="tile-value" id="valBrakeDist">23.6 m</span>
+          <span class="tile-sub" id="valBrakeStatus">Aman: <i>s</i> &le; 35.0 m</span>
+        </div>
+
+        <div class="tile">
+          <span class="tile-label">Reduksi Gaya Impuls (&Delta;<i>F</i> / <i>F</i>)</span>
+          <span class="tile-value" style="color:var(--primary);" id="valReduction">75.0 %</span>
+          <span class="tile-sub" id="valForceCompare"><i>F</i><sub>airbag</sub> vs <i>F</i><sub>kaku</sub></span>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- 5. MODAL HASIL, GRAFIK, DAN DATA PENGUKURAN (DITAMPILKAN DALAM BENTUK MODAL) -->
+  <div class="modal-backdrop" id="resultsModal" role="dialog" aria-modal="true" aria-labelledby="resultsModalTitle">
+    <div class="modal-box">
+      <div class="modal-head">
+        <h2 class="modal-title" id="resultsModalTitle">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="20" x2="18" y2="10"/>
+            <line x1="12" y1="20" x2="12" y2="4"/>
+            <line x1="6" y1="20" x2="6" y2="14"/>
+          </svg>
+          <span>Hasil Pengukuran &amp; Analisis Impuls Benturan <i>F</i>(<i>t</i>)</span>
+        </h2>
+        <button class="modal-close" id="btnCloseResultsModal" aria-label="Tutup Dialog Hasil">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+          <p style="font-size:12px; color:var(--text-2);">
+            Perbandingan kurva gaya impuls kontak saat benturan terjadi:
+          </p>
+          <div style="display:flex; align-items:center; gap:12px; font-size:11px;">
+            <span style="color:#ef4444; font-weight:600;">● Tanpa Airbag (Kaku)</span>
+            <span style="color:#38bdf8; font-weight:600;">● Dengan Airbag (Redam)</span>
+          </div>
+        </div>
+
+        <!-- CANVAS GRAFIK IMPULS F(t) -->
+        <canvas id="forceGraphCanvas" width="760" height="200"></canvas>
+
+        <!-- KETERANGAN FISIKA TEOREMA IMPULS MOMENTUM -->
+        <div style="font-size:12px; color:var(--text-2); line-height:1.6; background:var(--surface-elevated); padding:14px 16px; border-radius:var(--radius-sm); border:1px solid var(--border);">
+          <strong style="color:var(--text-1);">Teorema Impuls-Momentum:</strong> Luas area di bawah kurva gaya terhadap waktu merepresentasikan perubahan momentum linear benda (&Delta;<i>p</i>):
+          <div style="margin: 8px 0; padding: 7px 14px; background: rgba(0,0,0,0.22); border-radius: var(--radius-sm); border: 1px solid var(--border); font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 13px; font-weight: 600; color: var(--primary); display: inline-block;">
+            <i>I</i> = &int; <i>F</i>(<i>t</i>) d<i>t</i> = &Delta;<i>p</i> = <i>m</i> &Delta;<i>v</i>
+          </div>
+          <br>
+          Kehadiran kantung udara (<i>airbag</i>) memperpanjang interval waktu benturan (<i>&Delta;t</i>). Berdasarkan hubungan gaya impuls rata-rata <i>F&#772;</i> = &Delta;<i>p</i> / <i>&Delta;t</i>, deselerasi momentum yang terdistribusi pada durasi lebih panjang mereduksi gaya puncak (<i>F</i><sub>peak</sub>) yang dialami penumpang secara drastis hingga 70&ndash;80%, mencegah cedera benturan fatal.
+        </div>
+
+        <!-- TABEL PENCATATAN PERCOBAAN -->
+        <div class="table-section">
+          <div class="table-section-head">
+            <span class="table-section-title">Tabel Pencatatan Percobaan</span>
+            <button class="btn-clear-table" id="btnClearTable" title="Hapus semua data tabel">Hapus Semua</button>
+          </div>
+          <div class="table-scroll">
+            <table id="trialTable">
+              <thead>
+                <tr>
+                  <th>No.</th>
+                  <th><i>v</i><sub>0</sub> (km/jam)</th>
+                  <th><i>&mu;</i></th>
+                  <th><i>m</i> (kg)</th>
+                  <th><i>d</i> (m)</th>
+                  <th><i>&Delta;t</i> (s)</th>
+                  <th><i>t</i><sub>gerak</sub> (s)</th>
+                  <th><i>s</i><sub>henti</sub> (m)</th>
+                  <th><i>v</i><sub>benturan</sub> (km/jam)</th>
+                  <th>Hasil Evaluasi</th>
+                </tr>
+              </thead>
+              <tbody id="trialTableBody">
+                <tr><td colspan="10" class="no-data">Belum ada percobaan dicatat. Jalankan simulasi lalu tekan tombol Catat.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. MODAL DIAGRAM ALIR FLOWCHART -->
+  <div class="modal-backdrop" id="flowchartModal" role="dialog" aria-modal="true" aria-labelledby="flowchartModalTitle">
+    <div class="modal-box">
+      <div class="modal-head">
+        <h2 class="modal-title" id="flowchartModalTitle">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="6" height="6" rx="1"/>
+            <rect x="15" y="15" width="6" height="6" rx="1"/>
+            <path d="M6 9v6a3 3 0 0 0 3 3h6"/>
+          </svg>
+          <span>Diagram Alir Komputasi (Flowchart GLBB)</span>
+        </h2>
+        <button class="modal-close" id="btnCloseFlowchart" aria-label="Tutup Dialog Flowchart">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:12px; color:var(--text-2);">
+          Alur pengambilan keputusan matematis yang dijalankan oleh mesin simulasi fisika:
+        </p>
+        <div class="flowchart-view">
+          <img src="flowchart.svg" alt="Diagram Alir Simulasi Keselamatan Kendaraan">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="project.js"></script>
 </body>
-
 </html>
