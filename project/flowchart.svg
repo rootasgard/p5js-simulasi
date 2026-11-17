@@ -1,174 +1,112 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1680" width="100%" height="100%" style="background:#ffffff; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 620" width="100%" height="100%" style="background:#ffffff; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
   <defs>
-    <!-- Arrow Marker -->
-    <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
       <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#475569"/>
     </marker>
-    <marker id="arrow-green" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
       <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#059669"/>
     </marker>
-    <marker id="arrow-red" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
       <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#dc2626"/>
     </marker>
-    <!-- Drop Shadow Filter -->
     <filter id="shadow" x="-5%" y="-5%" width="110%" height="115%" filterUnits="userSpaceOnUse">
-      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.07"/>
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.06"/>
     </filter>
   </defs>
 
-  <!-- Title Header -->
-  <rect x="30" y="24" width="840" height="60" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5" filter="url(#shadow)"/>
-  <text x="450" y="52" text-anchor="middle" font-size="17" font-weight="700" fill="#0f172a">DIAGRAM ALIR SISTEM SIMULASI KESELAMATAN PENGEREMAN KENDARAAN</text>
-  <text x="450" y="72" text-anchor="middle" font-size="12" fill="#64748b">Fisika Komputasi GLBB • Metode Euler-Cromer • Syarat Batas Barikade &amp; Jalan Berlubang</text>
+  <!-- Title -->
+  <rect x="30" y="16" width="700" height="48" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="380" y="38" text-anchor="middle" font-size="14.5" font-weight="700" fill="#0f172a">DIAGRAM ALIR SIMULASI PENGEREMAN KENDARAAN (EULER-CROMER)</text>
+  <text x="380" y="54" text-anchor="middle" font-size="11" fill="#64748b">Fisika Komputasi GLBB • Syarat Batas Benturan &amp; Berhenti Selamat</text>
 
-  <!-- Node 1: Start Terminal -->
+  <!-- Node 1: Mulai -->
   <g filter="url(#shadow)">
-    <rect x="340" y="110" width="220" height="44" rx="22" fill="#0284c7" stroke="#0369a1" stroke-width="2"/>
-    <text x="450" y="137" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">Mulai Program Simulasi</text>
+    <rect x="295" y="80" width="170" height="36" rx="18" fill="#0284c7" stroke="#0369a1" stroke-width="1.5"/>
+    <text x="380" y="103" text-anchor="middle" font-size="12" font-weight="700" fill="#ffffff">Mulai</text>
   </g>
-  <line x1="450" y1="154" x2="450" y2="186" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="380" y1="116" x2="380" y2="136" stroke="#475569" stroke-width="1.8" marker-end="url(#arrow)"/>
 
-  <!-- Node 2: Environment Init -->
+  <!-- Node 2: Input Parameter -->
   <g filter="url(#shadow)">
-    <rect x="180" y="186" width="540" height="64" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
-    <text x="450" y="210" text-anchor="middle" font-size="13" font-weight="600" fill="#0f172a">Inisialisasi Lingkungan 3D WebGL (Metropolis &amp; Lintasan Panjang)</text>
-    <text x="450" y="234" text-anchor="middle" font-size="11.5" fill="#475569">Jalan Raya 5400 px, Lampu PJU, Posisi Awal Mobil x = -900 px, Barikade x = +320 px (Lintasan 1220 px), Potholes x &gt; 200 px</text>
+    <polygon points="230,136 530,136 500,180 200,180" fill="#f0f9ff" stroke="#0284c7" stroke-width="1.5"/>
+    <text x="365" y="156" text-anchor="middle" font-size="12" font-weight="600" fill="#0369a1">Input: v₀ (km/jam), m (kg), μ, d (m), Δt_airbag (s)</text>
+    <text x="365" y="172" text-anchor="middle" font-size="10.5" fill="#0284c7">Konversi: v₀ = v₀ / 3.6 (m/s)</text>
   </g>
-  <line x1="450" y1="250" x2="450" y2="282" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="365" y1="180" x2="365" y2="202" stroke="#475569" stroke-width="1.8" marker-end="url(#arrow)"/>
 
-  <!-- Node 3: Theme & Vehicle Selection -->
+  <!-- Node 3: Kondisi Awal -->
   <g filter="url(#shadow)">
-    <rect x="210" y="282" width="480" height="58" rx="8" fill="#f0f9ff" stroke="#38bdf8" stroke-width="1.5"/>
-    <text x="450" y="306" text-anchor="middle" font-size="13" font-weight="600" fill="#0369a1">Pilihan Mode Tampilan &amp; Model Kendaraan</text>
-    <text x="450" y="326" text-anchor="middle" font-size="11.5" fill="#0284c7">Toggle Tema: Siang (Light) / Malam (Dark) • Model: Mobil Kota, Sedan Hujan, Sport, Truk</text>
+    <rect x="235" y="202" width="260" height="42" rx="6" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.5"/>
+    <text x="365" y="220" text-anchor="middle" font-size="11.5" font-weight="600" fill="#0f172a">Inisialisasi Keadaan Awal:</text>
+    <text x="365" y="235" text-anchor="middle" font-size="11" fill="#475569">t = 0 s,  x = 0 m,  v = v₀,  a = -μ·g</text>
   </g>
-  <line x1="450" y1="340" x2="450" y2="372" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="365" y1="244" x2="365" y2="268" stroke="#475569" stroke-width="1.8" marker-end="url(#arrow)"/>
 
-  <!-- Node 4: Input Parameters (Parallelogram) -->
+  <!-- Node 4: Loop Integrasi Euler-Cromer -->
   <g filter="url(#shadow)">
-    <polygon points="210,372 710,372 670,436 170,436" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.5"/>
-    <text x="440" y="398" text-anchor="middle" font-size="13" font-weight="600" fill="#0369a1">Input Parameter Pengereman &amp; Mitigasi</text>
-    <text x="440" y="418" text-anchor="middle" font-size="11.5" fill="#0284c7">Laju awal v₀ (km/jam), massa m (kg), koefisien gesek μ, jarak barikade d (m), waktu redam Δt_airbag (s)</text>
+    <rect x="205" y="268" width="320" height="58" rx="6" fill="#ecfdf5" stroke="#10b981" stroke-width="1.8"/>
+    <text x="365" y="288" text-anchor="middle" font-size="12" font-weight="700" fill="#065f46">Integrasi Euler-Cromer (Loop Δt = 1/60 s):</text>
+    <text x="365" y="304" text-anchor="middle" font-size="11" fill="#047857">1. vₙ₊₁ = max(0, vₙ - μ·g·Δt)   [Batas v ≥ 0]</text>
+    <text x="365" y="318" text-anchor="middle" font-size="11" fill="#047857">2. xₙ₊₁ = xₙ + vₙ₊₁·Δt</text>
   </g>
-  <line x1="440" y1="436" x2="440" y2="468" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="365" y1="326" x2="365" y2="352" stroke="#475569" stroke-width="1.8" marker-end="url(#arrow)"/>
 
-  <!-- Node 5: Pre-compute GLBB -->
+  <!-- Node 5: Decision 1 - Tabrakan (x >= d) -->
   <g filter="url(#shadow)">
-    <rect x="220" y="468" width="440" height="74" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
-    <text x="440" y="492" text-anchor="middle" font-size="13" font-weight="600" fill="#0f172a">Pra-Hitung Metrik GLBB Analitik (Eksak)</text>
-    <text x="440" y="512" text-anchor="middle" font-size="11.5" fill="#334155">Konversi v₀ = v₀(km/j)/3.6 (m/s) • Perlambatan |a| = μ·g (g = 9.80665 m/s²)</text>
-    <text x="440" y="530" text-anchor="middle" font-size="11.5" fill="#334155">Waktu henti t_henti = v₀ / (μ·g) • Jarak henti s_henti = v₀² / (2·μ·g)</text>
-  </g>
-  <line x1="440" y1="542" x2="440" y2="574" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
-
-  <!-- Node 6: State Init -->
-  <g filter="url(#shadow)">
-    <rect x="260" y="574" width="360" height="48" rx="8" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
-    <text x="440" y="595" text-anchor="middle" font-size="12.5" font-weight="600" fill="#0f172a">Inisialisasi Variabel Status Dinamis</text>
-    <text x="440" y="612" text-anchor="middle" font-size="11" fill="#475569">t_gerak = 0 s, x = 0 m, v = v₀ m/s, simState = 'running'</text>
-  </g>
-  <line x1="440" y1="622" x2="440" y2="654" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
-
-  <!-- Node 7: Real-time Frame Loop (Loop Header) -->
-  <g filter="url(#shadow)">
-    <rect x="230" y="654" width="420" height="54" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.8"/>
-    <text x="440" y="676" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">Loop Frame Waktu-Nyata (p5.js draw() @ 60 FPS)</text>
-    <text x="440" y="696" text-anchor="middle" font-size="11.5" fill="#b45309">Hitung Δt = min(deltaTime/1000, 0.033 s) • Akumulasi t_gerak += Δt</text>
-  </g>
-  <line x1="440" y1="708" x2="440" y2="740" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
-
-  <!-- Node 8: Euler-Cromer Integration Step -->
-  <g filter="url(#shadow)">
-    <rect x="200" y="740" width="480" height="66" rx="8" fill="#ecfdf5" stroke="#10b981" stroke-width="1.8"/>
-    <text x="440" y="764" text-anchor="middle" font-size="13" font-weight="700" fill="#065f46">Integrasi Numerik Metode Euler-Cromer (Semi-Implisit)</text>
-    <text x="440" y="784" text-anchor="middle" font-size="12" fill="#047857">1. Kecepatan: vₙ₊₁ = max(0, vₙ - μ·g·Δt)   [Syarat Batas v ≥ 0]</text>
-    <text x="440" y="800" text-anchor="middle" font-size="12" fill="#047857">2. Posisi: xₙ₊₁ = xₙ + vₙ₊₁·Δt   [Metode Euler-Cromer]</text>
-  </g>
-  <line x1="440" y1="806" x2="440" y2="838" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
-
-  <!-- Node 9: Visual & Telemetry Update -->
-  <g filter="url(#shadow)">
-    <rect x="220" y="838" width="440" height="52" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
-    <text x="440" y="860" text-anchor="middle" font-size="12" font-weight="600" fill="#0f172a">Pembaruan Visual 3D &amp; Telemetri HUD</text>
-    <text x="440" y="878" text-anchor="middle" font-size="11" fill="#475569">x_world = -900 + (x/d)·1220 px • Rotasi Roda • Jejak Ban (Skid Marks) • HUD (v, x, t)</text>
-  </g>
-  <line x1="440" y1="890" x2="440" y2="926" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
-
-  <!-- Node 10: DECISION 1 - Collision Check (Diamond) -->
-  <g filter="url(#shadow)">
-    <polygon points="440,926 620,980 440,1034 260,980" fill="#fee2e2" stroke="#ef4444" stroke-width="2"/>
-    <text x="440" y="974" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">Apakah Mobil Menabrak Barikade?</text>
-    <text x="440" y="992" text-anchor="middle" font-size="12" font-weight="600" fill="#b91c1c">(xₙ₊₁ ≥ d)</text>
+    <polygon points="365,352 485,388 365,424 245,388" fill="#fee2e2" stroke="#ef4444" stroke-width="1.8"/>
+    <text x="365" y="384" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">Apakah xₙ₊₁ ≥ d ?</text>
+    <text x="365" y="398" text-anchor="middle" font-size="10" fill="#b91c1c">(Menabrak Barikade)</text>
   </g>
 
   <!-- Branch: YA (Crash - Left) -->
-  <line x1="260" y1="980" x2="160" y2="980" stroke="#dc2626" stroke-width="2"/>
-  <line x1="160" y1="980" x2="160" y2="1056" stroke="#dc2626" stroke-width="2" marker-end="url(#arrow-red)"/>
-  <text x="210" y="972" text-anchor="middle" font-size="12" font-weight="700" fill="#dc2626">Ya (s &gt; d)</text>
+  <line x1="245" y1="388" x2="160" y2="388" stroke="#dc2626" stroke-width="1.8"/>
+  <line x1="160" y1="388" x2="160" y2="444" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arrow-red)"/>
+  <text x="202" y="381" text-anchor="middle" font-size="11" font-weight="700" fill="#dc2626">Ya (s &gt; d)</text>
 
-  <!-- Crash Branch Box -->
+  <!-- Crash Action Box -->
   <g filter="url(#shadow)">
-    <rect x="40" y="1056" width="280" height="154" rx="8" fill="#fef2f2" stroke="#f87171" stroke-width="1.8"/>
-    <text x="180" y="1080" text-anchor="middle" font-size="13" font-weight="700" fill="#991b1b">Syarat Batas Benturan Aktif</text>
-    <text x="180" y="1102" text-anchor="middle" font-size="11.5" fill="#7f1d1d">1. Jepit koordinat: x_kontak = d</text>
-    <text x="180" y="1120" text-anchor="middle" font-size="11.5" fill="#7f1d1d">2. Laju benturan: v_benturan = vₙ₊₁</text>
-    <text x="180" y="1138" text-anchor="middle" font-size="11.5" fill="#7f1d1d">3. Kamera bergetar &amp; barikade miring</text>
-    <text x="180" y="1156" text-anchor="middle" font-size="11.5" fill="#7f1d1d">4. Balon Airbag mengembang r(t)</text>
-    <text x="180" y="1174" text-anchor="middle" font-size="11.5" fill="#7f1d1d">5. Hitung F_peak = (π/2)·(m·v_benturan / Δt_airbag)</text>
-    <text x="180" y="1192" text-anchor="middle" font-size="11.5" font-weight="600" fill="#b91c1c">Mencegah jatuh ke jalan berlubang!</text>
+    <rect x="50" y="444" width="220" height="66" rx="6" fill="#fef2f2" stroke="#f87171" stroke-width="1.5"/>
+    <text x="160" y="464" text-anchor="middle" font-size="11.5" font-weight="700" fill="#991b1b">Tabrakan Terjadi:</text>
+    <text x="160" y="480" text-anchor="middle" font-size="10.5" fill="#7f1d1d">v_impak = vₙ₊₁</text>
+    <text x="160" y="496" text-anchor="middle" font-size="10.5" fill="#7f1d1d">F_peak = (π/2)·(m·v_impak / Δt)</text>
   </g>
 
   <!-- Branch: TIDAK (Check Safe Stop - Straight Down) -->
-  <line x1="440" y1="1034" x2="440" y2="1090" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
-  <text x="460" y="1058" font-size="12" font-weight="600" fill="#475569">Tidak</text>
+  <line x1="365" y1="424" x2="365" y2="452" stroke="#475569" stroke-width="1.8" marker-end="url(#arrow)"/>
+  <text x="382" y="438" font-size="11" font-weight="600" fill="#475569">Tidak</text>
 
-  <!-- Node 11: DECISION 2 - Safe Stop Check (Diamond) -->
+  <!-- Node 6: Decision 2 - Berhenti (v == 0) -->
   <g filter="url(#shadow)">
-    <polygon points="440,1090 620,1144 440,1198 260,1144" fill="#ecfdf5" stroke="#10b981" stroke-width="2"/>
-    <text x="440" y="1138" text-anchor="middle" font-size="13" font-weight="700" fill="#065f46">Apakah Mobil Berhenti Selamat?</text>
-    <text x="440" y="1156" text-anchor="middle" font-size="12" font-weight="600" fill="#047857">(vₙ₊₁ ≤ 0.01 m/s)</text>
+    <polygon points="365,452 485,488 365,524 245,488" fill="#ecfdf5" stroke="#10b981" stroke-width="1.8"/>
+    <text x="365" y="484" text-anchor="middle" font-size="11.5" font-weight="700" fill="#065f46">Apakah vₙ₊₁ == 0 ?</text>
+    <text x="365" y="498" text-anchor="middle" font-size="10" fill="#047857">(Mobil Berhenti)</text>
   </g>
 
-  <!-- Branch Stop: YA (Safe Stop - Right) -->
-  <line x1="620" y1="1144" x2="720" y2="1144" stroke="#059669" stroke-width="2"/>
-  <line x1="720" y1="1144" x2="720" y2="1220" stroke="#059669" stroke-width="2" marker-end="url(#arrow-green)"/>
-  <text x="670" y="1136" text-anchor="middle" font-size="12" font-weight="700" fill="#059669">Ya (s ≤ d)</text>
+  <!-- Loop back from Decision 2 to Euler if Not Stopped -->
+  <path d="M 485 488 L 560 488 L 560 297 L 525 297" fill="none" stroke="#64748b" stroke-width="1.5" stroke-dasharray="4,4" marker-end="url(#arrow)"/>
+  <text x="575" y="390" font-size="10.5" font-weight="600" fill="#64748b">Tidak (Lanjut Loop)</text>
 
-  <!-- Safe Stop Branch Box -->
+  <!-- Branch: YA (Safe Stop - Right/Bottom) -->
+  <line x1="365" y1="524" x2="365" y2="546" stroke="#059669" stroke-width="1.8" marker-end="url(#arrow-green)"/>
+  <text x="385" y="538" font-size="11" font-weight="700" fill="#059669">Ya (s ≤ d)</text>
+
+  <!-- Safe Stop Action Box -->
   <g filter="url(#shadow)">
-    <rect x="580" y="1220" width="280" height="114" rx="8" fill="#f0fdf4" stroke="#4ade80" stroke-width="1.8"/>
-    <text x="720" y="1246" text-anchor="middle" font-size="13" font-weight="700" fill="#065f46">Syarat Batas Berhenti Aman</text>
-    <text x="720" y="1270" text-anchor="middle" font-size="11.5" fill="#14532d">1. Kunci kecepatan: v = 0 m/s</text>
-    <text x="720" y="1288" text-anchor="middle" font-size="11.5" fill="#14532d">2. Sisa jarak aman: Δx = d - x_akhir</text>
-    <text x="720" y="1306" text-anchor="middle" font-size="11.5" fill="#14532d">3. simState = 'safe' (Banner Hijau)</text>
-    <text x="720" y="1324" text-anchor="middle" font-size="11.5" font-weight="600" fill="#15803d">Mobil aman dari barikade &amp; lubang</text>
+    <rect x="255" y="546" width="220" height="52" rx="6" fill="#f0fdf4" stroke="#4ade80" stroke-width="1.5"/>
+    <text x="365" y="566" text-anchor="middle" font-size="11.5" font-weight="700" fill="#065f46">Berhenti Selamat:</text>
+    <text x="365" y="583" text-anchor="middle" font-size="10.5" fill="#15803d">v = 0, Margin Aman: Δx = d - xₙ₊₁</text>
   </g>
 
-  <!-- Branch Stop: TIDAK (Continue Loop - Loopback to 60 FPS) -->
-  <line x1="440" y1="1198" x2="440" y2="1240" stroke="#475569" stroke-width="2"/>
-  <line x1="440" y1="1240" x2="350" y2="1240" stroke="#475569" stroke-width="2"/>
-  <line x1="350" y1="1240" x2="350" y2="681" stroke="#475569" stroke-width="2"/>
-  <line x1="350" y1="681" x2="230" y2="681" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
-  <text x="410" y="1225" font-size="11" fill="#64748b">Masih meluncur (loop ke frame berikutnya)</text>
+  <!-- Lines to Done -->
+  <line x1="160" y1="510" x2="160" y2="572" stroke="#94a3b8" stroke-width="1.5"/>
+  <line x1="160" y1="572" x2="255" y2="572" stroke="#94a3b8" stroke-width="1.5"/>
 
-  <!-- Crash and Safe Convergence -->
-  <line x1="180" y1="1210" x2="180" y2="1360" stroke="#475569" stroke-width="2"/>
-  <line x1="720" y1="1334" x2="720" y2="1360" stroke="#475569" stroke-width="2"/>
-  <line x1="180" y1="1360" x2="720" y2="1360" stroke="#475569" stroke-width="2"/>
-  <line x1="450" y1="1360" x2="450" y2="1394" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="475" y1="572" x2="570" y2="572" stroke="#94a3b8" stroke-width="1.5"/>
+  <line x1="570" y1="572" x2="570" y2="572" stroke="#94a3b8" stroke-width="1.5"/>
 
-  <!-- Node 12: Reporting & Telemetry Table -->
+  <!-- Node 7: Selesai -->
   <g filter="url(#shadow)">
-    <rect x="190" y="1394" width="520" height="80" rx="8" fill="#f8fafc" stroke="#64748b" stroke-width="1.8"/>
-    <text x="450" y="1418" text-anchor="middle" font-size="13" font-weight="700" fill="#0f172a">Pencatatan Hasil &amp; Plotting Kurva Impuls</text>
-    <text x="450" y="1440" text-anchor="middle" font-size="11.5" fill="#334155">1. Catat ke Tabel Percobaan: No, v₀, μ, m, d, Δt, t_gerak, s_henti, v_benturan, Status</text>
-    <text x="450" y="1458" text-anchor="middle" font-size="11.5" fill="#334155">2. Render Kurva Gaya Impuls F(t) dinamis di Modal Hasil</text>
-  </g>
-  <line x1="450" y1="1474" x2="450" y2="1516" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
-
-  <!-- Node 13: End Terminal -->
-  <g filter="url(#shadow)">
-    <rect x="330" y="1516" width="240" height="46" rx="23" fill="#0f172a" stroke="#334155" stroke-width="2"/>
-    <text x="450" y="1545" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">Selesai / Siap Uji Coba Baru</text>
+    <rect x="570" y="550" width="140" height="44" rx="22" fill="#0f172a" stroke="#334155" stroke-width="1.5"/>
+    <text x="640" y="577" text-anchor="middle" font-size="11.5" font-weight="700" fill="#ffffff">Selesai / Catat</text>
   </g>
 </svg>
