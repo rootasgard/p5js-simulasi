@@ -51,6 +51,207 @@ let rainParticles = [];
 let waterSprayParticles = [];
 let speedTrailParticles = [];
 
+
+// ---------- EFEK SUARA PROSEDURAL (WEB AUDIO API) ----------
+let audioCtx = null;
+let soundEnabled = true;
+let engineOsc1 = null;
+let engineOsc2 = null;
+let engineGain = null;
+let engineFilter = null;
+let tireNoiseNode = null;
+let tireGain = null;
+
+function initAudio() {
+  if (!audioCtx) {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (AudioContextClass) {
+      audioCtx = new AudioContextClass();
+    }
+  }
+  if (audioCtx && audioCtx.state === "suspended") {
+    audioCtx.resume();
+  }
+}
+
+function startEngineSound() {
+  if (!soundEnabled) return;
+  initAudio();
+  if (!audioCtx) return;
+  stopEngineSound();
+
+  try {
+    const now = audioCtx.currentTime;
+
+    // Dual Oscillator: low sub rumble + gritty engine tone
+    engineOsc1 = audioCtx.createOscillator();
+    engineOsc2 = audioCtx.createOscillator();
+    engineOsc1.type = "sawtooth";
+    engineOsc2.type = "triangle";
+
+    engineFilter = audioCtx.createBiquadFilter();
+    engineFilter.type = "lowpass";
+    engineFilter.frequency.setValueAtTime(160, now);
+
+    engineGain = audioCtx.createGain();
+    engineGain.gain.setValueAtTime(0.001, now);
+    engineGain.gain.exponentialRampToValueAtTime(0.18, now + 0.12);
+
+    engineOsc1.connect(engineFilter);
+    engineOsc2.connect(engineFilter);
+    engineFilter.connect(engineGain);
+    engineGain.connect(audioCtx.destination);
+
+    engineOsc1.start(now);
+    engineOsc2.start(now);
+
+    // Tire noise generator (white noise bandpass buffer)
+    const bufferSize = audioCtx.sampleRate * 2;
+    const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const output = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      output[i] = Math.random() * 2 - 1;
+    }
+
+    tireNoiseNode = audioCtx.createBufferSource();
+    tireNoiseNode.buffer = noiseBuffer;
+    tireNoiseNode.loop = true;
+
+    const tireFilter = audioCtx.createBiquadFilter();
+    tireFilter.type = "bandpass";
+    tireFilter.frequency.setValueAtTime(1400, now);
+    tireFilter.Q.setValueAtTime(3.0, now);
+
+    tireGain = audioCtx.createGain();
+    tireGain.gain.setValueAtTime(0.0001, now);
+
+    tireNoiseNode.connect(tireFilter);
+    tireFilter.connect(tireGain);
+    tireGain.connect(audioCtx.destination);
+
+    tireNoiseNode.start(now);
+  } catch (e) {
+    console.warn("Audio start error:", e);
+  }
+}
+
+function updateEngineSound(speed, maxSpeed, muVal) {
+  if (!audioCtx || !soundEnabled || !engineOsc1 || !engineGain) return;
+  try {
+    const now = audioCtx.currentTime;
+    const speedRatio = Math.max(0, Math.min(1, speed / Math.max(1, maxSpeed)));
+
+    // Pitch scales with speed: from 42 Hz up to 170 Hz
+    const baseFreq = 42 + speedRatio * 128;
+    engineOsc1.frequency.setTargetAtTime(baseFreq, now, 0.05);
+    engineOsc2.frequency.setTargetAtTime(baseFreq * 0.5, now, 0.05);
+
+    // Filter opens as car accelerates / moves fast
+    const filterFreq = 140 + speedRatio * 520;
+    engineFilter.frequency.setTargetAtTime(filterFreq, now, 0.05);
+
+    // Volume scales with speed
+    const vol = speed > 0.5 ? 0.06 + speedRatio * 0.14 : 0.02;
+    engineGain.gain.setTargetAtTime(vol, now, 0.05);
+
+    // Tire screech when braking hard
+    if (tireGain) {
+      const isScreeching = (muVal >= 0.30 && speed > 1.5);
+      const screechVol = isScreeching ? Math.min(0.12, (speed / 20) * 0.12) : 0.0001;
+      tireGain.gain.setTargetAtTime(screechVol, now, 0.08);
+    }
+  } catch (e) {}
+}
+
+function stopEngineSound() {
+  if (!audioCtx) return;
+  const now = audioCtx.currentTime;
+  if (engineGain) {
+    try { engineGain.gain.setTargetAtTime(0.0001, now, 0.06); } catch (e) {}
+  }
+  if (tireGain) {
+    try { tireGain.gain.setTargetAtTime(0.0001, now, 0.05); } catch (e) {}
+  }
+  setTimeout(() => {
+    try { if (engineOsc1) { engineOsc1.stop(); engineOsc1.disconnect(); engineOsc1 = null; } } catch(e) {}
+    try { if (engineOsc2) { engineOsc2.stop(); engineOsc2.disconnect(); engineOsc2 = null; } } catch(e) {}
+    try { if (tireNoiseNode) { tireNoiseNode.stop(); tireNoiseNode.disconnect(); tireNoiseNode = null; } } catch(e) {}
+  }, 100);
+}
+
+function playCrashSound() {
+  if (!soundEnabled) return;
+  initAudio();
+  if (!audioCtx) return;
+
+  stopEngineSound();
+
+  try {
+    const now = audioCtx.currentTime;
+
+    // 1. Heavy Low Impact Thump (Sub-Bass Body Crash)
+    const thumpOsc = audioCtx.createOscillator();
+    const thumpGain = audioCtx.createGain();
+    thumpOsc.type = "sine";
+    thumpOsc.frequency.setValueAtTime(160, now);
+    thumpOsc.frequency.exponentialRampToValueAtTime(26, now + 0.38);
+
+    thumpGain.gain.setValueAtTime(0.75, now);
+    thumpGain.gain.exponentialRampToValueAtTime(0.001, now + 0.48);
+
+    thumpOsc.connect(thumpGain);
+    thumpGain.connect(audioCtx.destination);
+    thumpOsc.start(now);
+    thumpOsc.stop(now + 0.50);
+
+    // 2. Metallic Crash / Noise Crunch
+    const bufferSize = audioCtx.sampleRate * 0.5;
+    const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const data = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (audioCtx.sampleRate * 0.12));
+    }
+
+    const noiseNode = audioCtx.createBufferSource();
+    noiseNode.buffer = noiseBuffer;
+
+    const bandpass = audioCtx.createBiquadFilter();
+    bandpass.type = "bandpass";
+    bandpass.frequency.setValueAtTime(950, now);
+    bandpass.Q.setValueAtTime(2.2, now);
+
+    const noiseGain = audioCtx.createGain();
+    noiseGain.gain.setValueAtTime(0.60, now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.42);
+
+    noiseNode.connect(bandpass);
+    bandpass.connect(noiseGain);
+    noiseGain.connect(audioCtx.destination);
+    noiseNode.start(now);
+
+    // 3. Airbag Deployment Whoosh
+    const airbagNoise = audioCtx.createBufferSource();
+    airbagNoise.buffer = noiseBuffer;
+    const lowpass = audioCtx.createBiquadFilter();
+    lowpass.type = "lowpass";
+    lowpass.frequency.setValueAtTime(280, now);
+    lowpass.frequency.exponentialRampToValueAtTime(1500, now + 0.10);
+    lowpass.frequency.exponentialRampToValueAtTime(180, now + 0.38);
+
+    const airbagGain = audioCtx.createGain();
+    airbagGain.gain.setValueAtTime(0.001, now);
+    airbagGain.gain.linearRampToValueAtTime(0.38, now + 0.04);
+    airbagGain.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
+
+    airbagNoise.connect(lowpass);
+    lowpass.connect(airbagGain);
+    airbagGain.connect(audioCtx.destination);
+    airbagNoise.start(now + 0.02);
+  } catch (e) {
+    console.warn("Crash audio error:", e);
+  }
+}
+
 // ---------- ELEMEN DOM ----------
 let domSpeed, domMass, domMu, domDist, domAirbag;
 let domBadgeSpeed, domBadgeMass, domBadgeMu, domBadgeDist, domBadgeAirbag;
@@ -146,6 +347,34 @@ function initDOM() {
   }
 
   if (domBtnThemeToggle) domBtnThemeToggle.addEventListener("click", toggleTheme);
+
+  // Toggle Efek Suara (Mute / Unmute)
+  const domBtnSoundToggle = document.getElementById("btnSoundToggle");
+  const domSoundToggleText = document.getElementById("soundToggleText");
+
+  function toggleSound() {
+    initAudio();
+    soundEnabled = !soundEnabled;
+    if (domBtnSoundToggle) {
+      const iconOn = domBtnSoundToggle.querySelector(".icon-sound-on");
+      const iconOff = domBtnSoundToggle.querySelector(".icon-sound-off");
+      if (soundEnabled) {
+        domBtnSoundToggle.classList.remove("muted");
+        if (iconOn) iconOn.style.display = "inline-block";
+        if (iconOff) iconOff.style.display = "none";
+        if (domSoundToggleText) domSoundToggleText.textContent = "Suara";
+      } else {
+        domBtnSoundToggle.classList.add("muted");
+        if (iconOn) iconOn.style.display = "none";
+        if (iconOff) iconOff.style.display = "inline-block";
+        if (domSoundToggleText) domSoundToggleText.textContent = "Bisu";
+        stopEngineSound();
+      }
+    }
+  }
+
+  if (domBtnSoundToggle) domBtnSoundToggle.addEventListener("click", toggleSound);
+
 
   domValBrakeDist = document.getElementById("valBrakeDist");
   domValBrakeStatus = document.getElementById("valBrakeStatus");
@@ -298,6 +527,11 @@ function initDOM() {
     if (domMu) domMu.value = u;
     if (domDist) domDist.value = d;
     if (domAirbag) domAirbag.value = air;
+    if (v !== undefined) { v0_kmh = v; v0 = v0_kmh / 3.6; }
+    if (m !== undefined) mass = m;
+    if (u !== undefined) mu = u;
+    if (d !== undefined) wallDistance = d;
+    if (air !== undefined) impactTimeAirbag = air;
     if (type) {
       setVehicleType(type, true);
     }
@@ -311,6 +545,17 @@ function initDOM() {
 // ============================================================
 function setVehicleType(type, updateSelect = true) {
   currentVehicleType = type;
+
+  // Nilai default koefisien gesek sesuai jenis kendaraan / kondisi jalan jika slider disembunyikan
+  const frictionMap = {
+    city: 0.60,
+    rain: 0.35,
+    sport: 0.85,
+    truck: 0.55
+  };
+  if (!domMu && frictionMap[type] !== undefined) {
+    mu = frictionMap[type];
+  }
 
   const infoMap = {
     city: { badge: "Mobil Kota", hud: "Mobil Kota" },
@@ -467,6 +712,8 @@ function toggleStart() {
     simMotionDuration = 0;
     simState = "running";
     updateStatusUI("Sedang Mengerem...", "var(--primary)");
+    initAudio();
+    startEngineSound();
     if (domBtnStartText) {
       domBtnStartText.textContent = "Ulangi Simulasi";
     }
@@ -481,6 +728,8 @@ function toggleStart() {
   } else if (simState === "paused") {
     simState = "running";
     updateStatusUI("Sedang Mengerem...", "var(--primary)");
+    initAudio();
+    startEngineSound();
     if (domBtnPauseText) domBtnPauseText.textContent = "Jeda";
   }
 }
@@ -489,15 +738,19 @@ function togglePause() {
   if (simState === "running") {
     simState = "paused";
     updateStatusUI("Simulasi Dijeda", "var(--warning)");
+    stopEngineSound();
     if (domBtnPauseText) domBtnPauseText.textContent = "Lanjut";
   } else if (simState === "paused") {
     simState = "running";
     updateStatusUI("Sedang Mengerem...", "var(--primary)");
+    initAudio();
+    startEngineSound();
     if (domBtnPauseText) domBtnPauseText.textContent = "Jeda";
   }
 }
 
 function resetSimulation() {
+  stopEngineSound();
   onParamChange();
   simState = "idle";
   carPosM = 0;
@@ -574,6 +827,7 @@ function updatePhysics() {
     simMotionDuration += dt;
     const a_brake = mu * g; // Deselerasi (m/s^2)
     currentSpeed = max(0, currentSpeed - a_brake * dt);
+    updateEngineSound(currentSpeed, v0, mu);
 
     carPosM += currentSpeed * dt;
 
@@ -605,6 +859,9 @@ function updatePhysics() {
         collisionTime = 0;
         currentSpeed = 0;
         cameraShake = min(25, impactSpeed * 0.9);
+
+        // Mainkan efek suara benturan tabrakan
+        playCrashSound();
 
         // Buat partikel percikan benturan
         createImpactParticles();
@@ -646,6 +903,7 @@ function updatePhysics() {
       // BERHENTI SELAMAT SEBELUM DINDING (s <= d)
       currentSpeed = 0;
       simState = "safe";
+      stopEngineSound();
       const sisa = (wallDistance - carPosM).toFixed(1);
       updateStatusUI("Berhenti Aman", "var(--success)");
       if (domVerdictTag) {

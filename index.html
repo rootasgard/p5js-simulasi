@@ -194,6 +194,32 @@
       border-color: var(--primary);
     }
 
+    .sound-toggle-btn {
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      color: var(--text-2);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 5px 10px;
+      border-radius: var(--radius-sm);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .sound-toggle-btn:hover {
+      background: var(--surface-hover);
+      color: var(--text-1);
+      border-color: var(--primary);
+    }
+
+    .sound-toggle-btn.muted {
+      color: var(--text-3);
+      opacity: 0.75;
+    }
+
     /* Icon visibility depending on active theme */
     [data-theme="light"] .theme-toggle-btn .icon-sun {
       display: none;
@@ -1047,6 +1073,20 @@
     </div>
 
     <div class="header-actions">
+      <!-- TOMBOL TOGGLE EFEK SUARA -->
+      <button class="sound-toggle-btn" id="btnSoundToggle" title="Aktif / Nonaktifkan Suara" aria-label="Toggle Efek Suara">
+        <svg class="icon-sound-on" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
+        </svg>
+        <svg class="icon-sound-off" style="display:none;" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+          <line x1="23" y1="9" x2="17" y2="15"/>
+          <line x1="17" y1="9" x2="23" y2="15"/>
+        </svg>
+        <span id="soundToggleText">Suara</span>
+      </button>
+
       <!-- TOMBOL TOGGLE MODE SIANG / MALAM -->
       <button class="theme-toggle-btn" id="btnThemeToggle" title="Beralih ke Mode Siang" aria-label="Toggle Mode Siang atau Malam">
         <svg class="icon-sun" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1252,24 +1292,6 @@
           <input type="range" class="range-input" id="speedInput" min="20" max="140" value="60" step="2">
         </div>
 
-        <!-- FRICTION (mu) -->
-        <div class="control-item">
-          <div class="control-head">
-            <label class="control-name" for="muInput">Koefisien Gesek Kinetik (<i>&mu;</i>)</label>
-            <span class="control-val" id="muBadge">0.60</span>
-          </div>
-          <input type="range" class="range-input" id="muInput" min="0.10" max="1.00" value="0.60" step="0.05">
-        </div>
-
-        <!-- OBSTACLE DISTANCE (d) -->
-        <div class="control-item">
-          <div class="control-head">
-            <label class="control-name" for="distInput">Jarak Penghalang Perbaikan (<i>d</i>)</label>
-            <span class="control-val" id="distBadge">35 meter</span>
-          </div>
-          <input type="range" class="range-input" id="distInput" min="20" max="80" value="45" step="1">
-        </div>
-
         <!-- VEHICLE MASS (m) -->
         <div class="control-item">
           <div class="control-head">
@@ -1277,36 +1299,6 @@
             <span class="control-val" id="massBadge">1000 kg</span>
           </div>
           <input type="range" class="range-input" id="massInput" min="500" max="2500" value="1000" step="50">
-        </div>
-
-        <!-- AIRBAG DURATION (dt) -->
-        <div class="control-item">
-          <div class="control-head">
-            <label class="control-name" for="airbagInput">Waktu Deformasi Airbag (<i>&Delta;t</i>)</label>
-            <span class="control-val" id="airbagBadge">0.20 detik</span>
-          </div>
-          <input type="range" class="range-input" id="airbagInput" min="0.08" max="0.45" value="0.20" step="0.01">
-        </div>
-      </div>
-
-      <!-- TELEMETRY PREVIEW TILES -->
-      <div class="telemetry-row">
-        <div class="tile">
-          <span class="tile-label">Perlambatan Fisis (<i>a</i> = <i>&mu;g</i>)</span>
-          <span class="tile-value" id="valAccelMetric">5.88 m/s<sup>2</sup></span>
-          <span class="tile-sub">Gaya gesek: <i>f</i><sub>gesek</sub> = <i>&mu;mg</i></span>
-        </div>
-
-        <div class="tile">
-          <span class="tile-label">Jarak Pengereman (<i>s</i> = <i>v</i><sub>0</sub><sup>2</sup> / 2<i>a</i>)</span>
-          <span class="tile-value" id="valBrakeDist">23.6 m</span>
-          <span class="tile-sub" id="valBrakeStatus">Aman: <i>s</i> &le; 35.0 m</span>
-        </div>
-
-        <div class="tile">
-          <span class="tile-label">Reduksi Gaya Impuls (&Delta;<i>F</i> / <i>F</i>)</span>
-          <span class="tile-value" style="color:var(--primary);" id="valReduction">75.0 %</span>
-          <span class="tile-sub" id="valForceCompare"><i>F</i><sub>airbag</sub> vs <i>F</i><sub>kaku</sub></span>
         </div>
       </div>
     </div>
