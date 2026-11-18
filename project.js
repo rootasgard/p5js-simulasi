@@ -54,58 +54,94 @@ let speedTrailParticles = [];
 
 // ---------- EFEK SUARA PROSEDURAL (WEB AUDIO API) ----------
 let audioCtx = null;
+let masterGainNode = null;
 let soundEnabled = true;
-let engineOsc1 = null;
-let engineOsc2 = null;
-let engineGain = null;
-let engineFilter = null;
-let tireNoiseNode = null;
-let tireGain = null;
+let activeEngine = null;
 
+// Inisialisasi AudioContext & Master Gain
 function initAudio() {
   if (!audioCtx) {
     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
     if (AudioContextClass) {
       audioCtx = new AudioContextClass();
+      masterGainNode = audioCtx.createGain();
+      masterGainNode.gain.setValueAtTime(soundEnabled ? 1.0 : 0.0, audioCtx.currentTime);
+      masterGainNode.connect(audioCtx.destination);
     }
   }
   if (audioCtx && audioCtx.state === "suspended") {
-    audioCtx.resume();
+    audioCtx.resume().catch(() => {});
   }
+}
+
+// Global unlocker: buka akses audio pada interaksi pertama pengguna (klik/sentuh/keyboard)
+function unlockAudio() {
+  initAudio();
+  if (audioCtx && audioCtx.state === "suspended") {
+    audioCtx.resume().catch(() => {});
+  }
+}
+["click", "pointerdown", "touchstart", "keydown"].forEach((evt) => {
+  window.addEventListener(evt, unlockAudio, { passive: true });
+});
+
+// Nada konfirmasi pendek saat tombol suara dinyalakan
+function playConfirmationChirp() {
+  if (!soundEnabled) return;
+  initAudio();
+  if (!audioCtx) return;
+  try {
+    const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(587.33, now); // D5
+    osc.frequency.setValueAtTime(880.00, now + 0.06); // A5
+    gain.gain.setValueAtTime(0.001, now);
+    gain.gain.linearRampToValueAtTime(0.18, now + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+    osc.connect(gain);
+    gain.connect(masterGainNode || audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + 0.18);
+  } catch (e) {}
 }
 
 function startEngineSound() {
   if (!soundEnabled) return;
   initAudio();
   if (!audioCtx) return;
-  stopEngineSound();
+
+  // Hentikan mesin lama seketika tanpa timeout yang merusak node baru
+  stopEngineSound(true);
 
   try {
     const now = audioCtx.currentTime;
 
-    // Dual Oscillator: low sub rumble + gritty engine tone
-    engineOsc1 = audioCtx.createOscillator();
-    engineOsc2 = audioCtx.createOscillator();
-    engineOsc1.type = "sawtooth";
-    engineOsc2.type = "triangle";
+    // Dual Oscillator: Sawtooth (deru putaran mesin) + Triangle (dentuman silinder sub-bass)
+    const osc1 = audioCtx.createOscillator();
+    const osc2 = audioCtx.createOscillator();
+    osc1.type = "sawtooth";
+    osc2.type = "triangle";
 
-    engineFilter = audioCtx.createBiquadFilter();
-    engineFilter.type = "lowpass";
-    engineFilter.frequency.setValueAtTime(160, now);
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = "lowpass";
+    filter.frequency.setValueAtTime(220, now);
+    filter.Q.setValueAtTime(1.5, now);
 
-    engineGain = audioCtx.createGain();
-    engineGain.gain.setValueAtTime(0.001, now);
-    engineGain.gain.exponentialRampToValueAtTime(0.18, now + 0.12);
+    const gain = audioCtx.createGain();
+    gain.gain.setValueAtTime(0.01, now);
+    gain.gain.linearRampToValueAtTime(0.28, now + 0.08);
 
-    engineOsc1.connect(engineFilter);
-    engineOsc2.connect(engineFilter);
-    engineFilter.connect(engineGain);
-    engineGain.connect(audioCtx.destination);
+    osc1.connect(filter);
+    osc2.connect(filter);
+    filter.connect(gain);
+    gain.connect(masterGainNode || audioCtx.destination);
 
-    engineOsc1.start(now);
-    engineOsc2.start(now);
+    osc1.start(now);
+    osc2.start(now);
 
-    // Tire noise generator (white noise bandpass buffer)
+    // Generator desisan gesekan ban ke aspal (procedural bandpass noise)
     const bufferSize = audioCtx.sampleRate * 2;
     const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
     const output = noiseBuffer.getChannelData(0);
@@ -113,70 +149,92 @@ function startEngineSound() {
       output[i] = Math.random() * 2 - 1;
     }
 
-    tireNoiseNode = audioCtx.createBufferSource();
-    tireNoiseNode.buffer = noiseBuffer;
-    tireNoiseNode.loop = true;
+    const tireNode = audioCtx.createBufferSource();
+    tireNode.buffer = noiseBuffer;
+    tireNode.loop = true;
 
     const tireFilter = audioCtx.createBiquadFilter();
     tireFilter.type = "bandpass";
-    tireFilter.frequency.setValueAtTime(1400, now);
-    tireFilter.Q.setValueAtTime(3.0, now);
+    tireFilter.frequency.setValueAtTime(1600, now);
+    tireFilter.Q.setValueAtTime(2.8, now);
 
-    tireGain = audioCtx.createGain();
+    const tireGain = audioCtx.createGain();
     tireGain.gain.setValueAtTime(0.0001, now);
 
-    tireNoiseNode.connect(tireFilter);
+    tireNode.connect(tireFilter);
     tireFilter.connect(tireGain);
-    tireGain.connect(audioCtx.destination);
+    tireGain.connect(masterGainNode || audioCtx.destination);
 
-    tireNoiseNode.start(now);
+    tireNode.start(now);
+
+    activeEngine = {
+      osc1,
+      osc2,
+      filter,
+      gain,
+      tireNode,
+      tireFilter,
+      tireGain
+    };
   } catch (e) {
     console.warn("Audio start error:", e);
   }
 }
 
 function updateEngineSound(speed, maxSpeed, muVal) {
-  if (!audioCtx || !soundEnabled || !engineOsc1 || !engineGain) return;
+  if (!audioCtx || !soundEnabled || !activeEngine) return;
   try {
     const now = audioCtx.currentTime;
     const speedRatio = Math.max(0, Math.min(1, speed / Math.max(1, maxSpeed)));
 
-    // Pitch scales with speed: from 42 Hz up to 170 Hz
-    const baseFreq = 42 + speedRatio * 128;
-    engineOsc1.frequency.setTargetAtTime(baseFreq, now, 0.05);
-    engineOsc2.frequency.setTargetAtTime(baseFreq * 0.5, now, 0.05);
+    // Frekuensi mesin naik saat kecepatan tinggi: dari 48 Hz (idle/pelan) sampai 185 Hz
+    const baseFreq = 48 + speedRatio * 137;
+    activeEngine.osc1.frequency.setTargetAtTime(baseFreq, now, 0.04);
+    activeEngine.osc2.frequency.setTargetAtTime(baseFreq * 0.5, now, 0.04);
 
-    // Filter opens as car accelerates / moves fast
-    const filterFreq = 140 + speedRatio * 520;
-    engineFilter.frequency.setTargetAtTime(filterFreq, now, 0.05);
+    // Filter bukaan throttle membuka lebih lebar saat kecepatan tinggi
+    const filterFreq = 200 + speedRatio * 750;
+    activeEngine.filter.frequency.setTargetAtTime(filterFreq, now, 0.04);
 
-    // Volume scales with speed
-    const vol = speed > 0.5 ? 0.06 + speedRatio * 0.14 : 0.02;
-    engineGain.gain.setTargetAtTime(vol, now, 0.05);
+    // Volume mesin tetap terdengar jelas selama meluncur
+    const vol = speed > 0.3 ? (0.16 + speedRatio * 0.22) : 0.05;
+    activeEngine.gain.gain.setTargetAtTime(vol, now, 0.04);
 
-    // Tire screech when braking hard
-    if (tireGain) {
-      const isScreeching = (muVal >= 0.30 && speed > 1.5);
-      const screechVol = isScreeching ? Math.min(0.12, (speed / 20) * 0.12) : 0.0001;
-      tireGain.gain.setTargetAtTime(screechVol, now, 0.08);
+    // Decitan ban saat pengereman keras di aspal kering
+    if (activeEngine.tireGain) {
+      const isScreeching = (muVal >= 0.30 && speed > 1.2);
+      const screechVol = isScreeching ? Math.min(0.24, 0.05 + (speed / 20) * 0.20) : 0.0001;
+      activeEngine.tireGain.gain.setTargetAtTime(screechVol, now, 0.06);
     }
   } catch (e) {}
 }
 
-function stopEngineSound() {
+function stopEngineSound(immediate = false) {
+  if (!activeEngine) return;
+  const eng = activeEngine;
+  activeEngine = null; // Detach segera agar panggilan baru tidak terganggu
+
   if (!audioCtx) return;
   const now = audioCtx.currentTime;
-  if (engineGain) {
-    try { engineGain.gain.setTargetAtTime(0.0001, now, 0.06); } catch (e) {}
+
+  if (immediate) {
+    try { eng.gain.gain.setValueAtTime(0, now); } catch (e) {}
+    try { eng.tireGain.gain.setValueAtTime(0, now); } catch (e) {}
+    try { eng.osc1.stop(); eng.osc1.disconnect(); } catch (e) {}
+    try { eng.osc2.stop(); eng.osc2.disconnect(); } catch (e) {}
+    try { eng.tireNode.stop(); eng.tireNode.disconnect(); } catch (e) {}
+    try { eng.filter.disconnect(); } catch (e) {}
+  } else {
+    try { eng.gain.gain.setTargetAtTime(0.0001, now, 0.05); } catch (e) {}
+    try { eng.tireGain.gain.setTargetAtTime(0.0001, now, 0.05); } catch (e) {}
+    setTimeout(() => {
+      try { eng.osc1.stop(); eng.osc1.disconnect(); } catch (e) {}
+      try { eng.osc2.stop(); eng.osc2.disconnect(); } catch (e) {}
+      try { eng.tireNode.stop(); eng.tireNode.disconnect(); } catch (e) {}
+      try { eng.filter.disconnect(); } catch (e) {}
+      try { eng.gain.disconnect(); } catch (e) {}
+    }, 100);
   }
-  if (tireGain) {
-    try { tireGain.gain.setTargetAtTime(0.0001, now, 0.05); } catch (e) {}
-  }
-  setTimeout(() => {
-    try { if (engineOsc1) { engineOsc1.stop(); engineOsc1.disconnect(); engineOsc1 = null; } } catch(e) {}
-    try { if (engineOsc2) { engineOsc2.stop(); engineOsc2.disconnect(); engineOsc2 = null; } } catch(e) {}
-    try { if (tireNoiseNode) { tireNoiseNode.stop(); tireNoiseNode.disconnect(); tireNoiseNode = null; } } catch(e) {}
-  }, 100);
 }
 
 function playCrashSound() {
@@ -184,32 +242,33 @@ function playCrashSound() {
   initAudio();
   if (!audioCtx) return;
 
-  stopEngineSound();
+  // Hentikan suara deru mesin seketika saat benturan
+  stopEngineSound(true);
 
   try {
     const now = audioCtx.currentTime;
 
-    // 1. Heavy Low Impact Thump (Sub-Bass Body Crash)
+    // 1. Sub-Bass Thump (Dentuman momentum bodi logam terhenti mendadak)
     const thumpOsc = audioCtx.createOscillator();
     const thumpGain = audioCtx.createGain();
     thumpOsc.type = "sine";
-    thumpOsc.frequency.setValueAtTime(160, now);
-    thumpOsc.frequency.exponentialRampToValueAtTime(26, now + 0.38);
+    thumpOsc.frequency.setValueAtTime(170, now);
+    thumpOsc.frequency.exponentialRampToValueAtTime(22, now + 0.40);
 
-    thumpGain.gain.setValueAtTime(0.75, now);
-    thumpGain.gain.exponentialRampToValueAtTime(0.001, now + 0.48);
+    thumpGain.gain.setValueAtTime(0.95, now);
+    thumpGain.gain.exponentialRampToValueAtTime(0.001, now + 0.50);
 
     thumpOsc.connect(thumpGain);
-    thumpGain.connect(audioCtx.destination);
+    thumpGain.connect(masterGainNode || audioCtx.destination);
     thumpOsc.start(now);
-    thumpOsc.stop(now + 0.50);
+    thumpOsc.stop(now + 0.52);
 
-    // 2. Metallic Crash / Noise Crunch
-    const bufferSize = audioCtx.sampleRate * 0.5;
+    // 2. Metallic Crash / Deformasi Bodi (Resonant Crunch)
+    const bufferSize = audioCtx.sampleRate * 0.55;
     const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
     const data = noiseBuffer.getChannelData(0);
     for (let i = 0; i < bufferSize; i++) {
-      data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (audioCtx.sampleRate * 0.12));
+      data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (audioCtx.sampleRate * 0.14));
     }
 
     const noiseNode = audioCtx.createBufferSource();
@@ -217,35 +276,51 @@ function playCrashSound() {
 
     const bandpass = audioCtx.createBiquadFilter();
     bandpass.type = "bandpass";
-    bandpass.frequency.setValueAtTime(950, now);
+    bandpass.frequency.setValueAtTime(900, now);
     bandpass.Q.setValueAtTime(2.2, now);
 
     const noiseGain = audioCtx.createGain();
-    noiseGain.gain.setValueAtTime(0.60, now);
-    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.42);
+    noiseGain.gain.setValueAtTime(0.85, now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
 
     noiseNode.connect(bandpass);
     bandpass.connect(noiseGain);
-    noiseGain.connect(audioCtx.destination);
+    noiseGain.connect(masterGainNode || audioCtx.destination);
     noiseNode.start(now);
 
-    // 3. Airbag Deployment Whoosh
+    // 3. High Shatter / Pecahan Kaca & Komponen Ringsek
+    const shatterNode = audioCtx.createBufferSource();
+    shatterNode.buffer = noiseBuffer;
+    const highpass = audioCtx.createBiquadFilter();
+    highpass.type = "highpass";
+    highpass.frequency.setValueAtTime(2600, now);
+
+    const shatterGain = audioCtx.createGain();
+    shatterGain.gain.setValueAtTime(0.40, now);
+    shatterGain.gain.exponentialRampToValueAtTime(0.001, now + 0.32);
+
+    shatterNode.connect(highpass);
+    highpass.connect(shatterGain);
+    shatterGain.connect(masterGainNode || audioCtx.destination);
+    shatterNode.start(now);
+
+    // 4. Airbag Explosive Deployment & Venting (Ledakan pyrotechnic & desisan airbag)
     const airbagNoise = audioCtx.createBufferSource();
     airbagNoise.buffer = noiseBuffer;
     const lowpass = audioCtx.createBiquadFilter();
     lowpass.type = "lowpass";
-    lowpass.frequency.setValueAtTime(280, now);
-    lowpass.frequency.exponentialRampToValueAtTime(1500, now + 0.10);
-    lowpass.frequency.exponentialRampToValueAtTime(180, now + 0.38);
+    lowpass.frequency.setValueAtTime(320, now);
+    lowpass.frequency.exponentialRampToValueAtTime(1600, now + 0.08);
+    lowpass.frequency.exponentialRampToValueAtTime(150, now + 0.40);
 
     const airbagGain = audioCtx.createGain();
     airbagGain.gain.setValueAtTime(0.001, now);
-    airbagGain.gain.linearRampToValueAtTime(0.38, now + 0.04);
-    airbagGain.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
+    airbagGain.gain.linearRampToValueAtTime(0.55, now + 0.03);
+    airbagGain.gain.exponentialRampToValueAtTime(0.001, now + 0.42);
 
     airbagNoise.connect(lowpass);
     lowpass.connect(airbagGain);
-    airbagGain.connect(audioCtx.destination);
+    airbagGain.connect(masterGainNode || audioCtx.destination);
     airbagNoise.start(now + 0.02);
   } catch (e) {
     console.warn("Crash audio error:", e);
@@ -355,6 +430,9 @@ function initDOM() {
   function toggleSound() {
     initAudio();
     soundEnabled = !soundEnabled;
+    if (masterGainNode && audioCtx) {
+      masterGainNode.gain.setValueAtTime(soundEnabled ? 1.0 : 0.0, audioCtx.currentTime);
+    }
     if (domBtnSoundToggle) {
       const iconOn = domBtnSoundToggle.querySelector(".icon-sound-on");
       const iconOff = domBtnSoundToggle.querySelector(".icon-sound-off");
@@ -363,12 +441,13 @@ function initDOM() {
         if (iconOn) iconOn.style.display = "inline-block";
         if (iconOff) iconOff.style.display = "none";
         if (domSoundToggleText) domSoundToggleText.textContent = "Suara";
+        playConfirmationChirp();
       } else {
         domBtnSoundToggle.classList.add("muted");
         if (iconOn) iconOn.style.display = "none";
         if (iconOff) iconOff.style.display = "inline-block";
         if (domSoundToggleText) domSoundToggleText.textContent = "Bisu";
-        stopEngineSound();
+        stopEngineSound(true);
       }
     }
   }
@@ -886,6 +965,7 @@ function updatePhysics() {
         // Berhenti pas di depan dinding
         simState = "safe";
         currentSpeed = 0;
+        stopEngineSound();
         updateStatusUI("Berhenti Tepat", "var(--success)");
         if (domVerdictTag) {
           domVerdictTag.innerHTML = "Berhenti Tepat: <i>s</i> = <i>d</i>";
