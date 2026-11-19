@@ -898,7 +898,7 @@ function draw() {
 // UPDATE FISIKA KENDARAAN
 // ============================================================
 function updatePhysics() {
-  // Ambil delta waktu frame yang aman (maksimal 33 ms)
+  // Batasi lonjakan waktu agar gerak tetap stabil saat frame terlambat.
   const dt = min(deltaTime / 1000, 0.033);
 
   // JIKA SEDANG MELUNCUR & MENGEREM
