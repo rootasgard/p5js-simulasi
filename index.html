@@ -69,17 +69,6 @@
       box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
     }
 
-    [data-theme="light"] .verdict-banner {
-      background: rgba(255, 255, 255, 0.96);
-      border-top: 1px solid var(--border);
-      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.04);
-    }
-
-    [data-theme="light"] .verdict-tag {
-      background: rgba(15, 23, 42, 0.06);
-      color: var(--text-2);
-    }
-
     [data-theme="light"] .right-toolbar {
       background: rgba(255, 255, 255, 0.96);
       border-color: rgba(15, 23, 42, 0.14);
@@ -371,51 +360,6 @@
         padding: 4px 8px;
         font-size: 11px;
       }
-    }
-
-    /* VERDICT BANNER (FLOWCHART DECISION) */
-    .verdict-banner {
-      background: rgba(15, 23, 42, 0.95);
-      backdrop-filter: blur(8px);
-      border-top: 1px solid var(--border);
-      padding: 8px 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 8px;
-      font-size: 12px;
-      z-index: 15;
-      flex-shrink: 0;
-    }
-
-    .verdict-left {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .verdict-tag {
-      font-size: 10px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      padding: 2px 7px;
-      border-radius: 4px;
-      background: rgba(255, 255, 255, 0.08);
-      color: var(--text-2);
-    }
-
-    .verdict-text {
-      font-weight: 600;
-      color: var(--text-1);
-    }
-
-    .verdict-math {
-      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
-      font-size: 11px;
-      color: var(--text-2);
     }
 
     /* 3. RIGHT TOOLBAR (COLLAPSIBLE / MODAL TRIGGERS) */
@@ -1183,17 +1127,6 @@
 
     <!-- P5.JS 3D WEBGL CANVAS -->
     <div id="canvas-container"></div>
-
-    <!-- VERDICT BANNER FLOWCHART DECISION (s <= d) -->
-    <div class="verdict-banner" id="verdictBanner">
-      <div class="verdict-left">
-        <span class="verdict-tag" id="verdictTag">Kriteria: <i>s</i> &le; <i>d</i></span>
-        <span class="verdict-text" id="verdictText">Kondisi: <i>s</i> (23.6 m) &le; <i>d</i> (35.0 m) &rarr; Kendaraan Berhenti Selamat</span>
-      </div>
-      <div class="verdict-math" id="verdictMath">
-        <i>a</i> = 5.88 m/s<sup>2</sup> | <i>s</i> = 23.6 m | Sisa Jarak &Delta;<i>x</i> = 11.4 m
-      </div>
-    </div>
 
   </main>
 

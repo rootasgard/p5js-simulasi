@@ -335,7 +335,6 @@ let domStatusBadge, domStatusText;
 let domHudSpeed, domHudPos, domHudTarget, domHudAccel, domHudTime;
 let domValBrakeDist, domValBrakeStatus, domValReduction, domValForceCompare;
 let domValAccelMetric;
-let domVerdictBanner, domVerdictTag, domVerdictText, domVerdictMath;
 let domParamDrawer, domBtnToggleParams, domBtnCloseParams, domParamBackdrop;
 let domRightToolbar, domBtnToggleToolbar;
 let domResultsModal, domBtnOpenResultsModal, domBtnCloseResultsModal;
@@ -460,12 +459,6 @@ function initDOM() {
   domValReduction = document.getElementById("valReduction");
   domValForceCompare = document.getElementById("valForceCompare");
   domValAccelMetric = document.getElementById("valAccelMetric");
-
-  // Verdict Banner Flowchart
-  domVerdictBanner = document.getElementById("verdictBanner");
-  domVerdictTag = document.getElementById("verdictTag");
-  domVerdictText = document.getElementById("verdictText");
-  domVerdictMath = document.getElementById("verdictMath");
 
   // Modal Flowchart (button removed from UI; keep modal closeable via Escape)
   domFlowModal = document.getElementById("flowchartModal");
@@ -740,38 +733,7 @@ function updateCalculatedMetrics() {
     }
   }
 
-  // 2. Evaluasi Verdict Banner (Notasi Matematis Standar GLBB & Keputusan Flowchart s <= d)
-  if (domVerdictBanner) {
-    if (isSafe) {
-      domVerdictBanner.style.borderLeft = "4px solid var(--success)";
-      if (domVerdictTag) {
-        domVerdictTag.innerHTML = "Kriteria: <i>s</i> &le; <i>d</i>";
-        domVerdictTag.style.color = "var(--success)";
-      }
-      if (domVerdictText) {
-        domVerdictText.innerHTML = `Aman: Kendaraan berhenti ${(wallDistance - s_brake).toFixed(1)} m sebelum barikade perbaikan jalan`;
-        domVerdictText.style.color = "var(--success)";
-      }
-      if (domVerdictMath) {
-        domVerdictMath.innerHTML = `<i>a</i> = ${a_brake.toFixed(2)} m/s<sup>2</sup> | <i>s</i> = ${s_brake.toFixed(1)} m | Sisa Jarak &Delta;<i>x</i> = ${(wallDistance - s_brake).toFixed(1)} m`;
-      }
-    } else {
-      domVerdictBanner.style.borderLeft = "4px solid var(--danger)";
-      if (domVerdictTag) {
-        domVerdictTag.innerHTML = "Kriteria: <i>s</i> &gt; <i>d</i>";
-        domVerdictTag.style.color = "var(--danger)";
-      }
-      if (domVerdictText) {
-        domVerdictText.innerHTML = `Bahaya: Terjadi benturan barikade perbaikan pada laju ${(v_crash * 3.6).toFixed(1)} km/jam!`;
-        domVerdictText.style.color = "var(--danger)";
-      }
-      if (domVerdictMath) {
-        domVerdictMath.innerHTML = `<i>a</i> = ${a_brake.toFixed(2)} m/s<sup>2</sup> | Butuh <i>s</i> = ${s_brake.toFixed(1)} m | Laju Benturan <i>v</i><sub>benturan</sub> = ${(v_crash * 3.6).toFixed(1)} km/jam [&radic;(<i>v</i><sub>0</sub><sup>2</sup> &minus; 2<i>ad</i>)]`;
-      }
-    }
-  }
-
-  // 3. Efektivitas Airbag
+  // 2. Efektivitas Airbag
   if (domValReduction) domValReduction.innerHTML = `${reduction.toFixed(1)} %`;
   if (domValForceCompare) {
     domValForceCompare.innerHTML = `<i>F</i><sub>airbag</sub>: ${(F_air / 1000).toFixed(0)} kN vs <i>F</i><sub>kaku</sub>: ${(F_no / 1000).toFixed(0)} kN`;
@@ -795,14 +757,6 @@ function toggleStart() {
     startEngineSound();
     if (domBtnStartText) {
       domBtnStartText.textContent = "Ulangi Simulasi";
-    }
-    if (domVerdictTag) {
-      domVerdictTag.textContent = "Simulasi Berjalan";
-      domVerdictTag.style.background = "rgba(56, 189, 248, 0.15)";
-      domVerdictTag.style.color = "#38bdf8";
-    }
-    if (domVerdictText) {
-      domVerdictText.textContent = "Kendaraan sedang meluncur dan melakukan pengereman...";
     }
   } else if (simState === "paused") {
     simState = "running";
@@ -922,11 +876,6 @@ function updatePhysics() {
       if (skidMarks.length > 250) skidMarks.shift();
     }
 
-    // Update real-time verdict text saat pengereman berlangsung
-    if (domVerdictText) {
-      domVerdictText.innerHTML = `Pengereman darurat aktif: Posisi <i>x</i> = ${carPosM.toFixed(1)} m / ${wallDistance.toFixed(1)} m sebelum perbaikan | Laju <i>v</i> = ${(currentSpeed * 3.6).toFixed(1)} km/jam`;
-    }
-
     // CEK BENTURAN DINDING
     if (carPosM >= wallDistance) {
       carPosM = wallDistance;
@@ -946,19 +895,6 @@ function updatePhysics() {
         createImpactParticles();
 
         updateStatusUI("Tabrakan Terjadi", "var(--danger)");
-        if (domVerdictTag) {
-          domVerdictTag.innerHTML = "Tabrakan: <i>s</i> &gt; <i>d</i>";
-          domVerdictTag.style.background = "rgba(239, 68, 68, 0.2)";
-          domVerdictTag.style.color = "#ef4444";
-        }
-        if (domVerdictText) {
-          domVerdictText.innerHTML = `Kendaraan menabrak barikade perbaikan pada laju <i>v</i><sub>benturan</sub> = ${(impactSpeed * 3.6).toFixed(1)} km/jam (${impactSpeed.toFixed(1)} m/s). Airbag aktif mencegah masuk ke jalan berlubang!`;
-        }
-        if (domVerdictMath) {
-          const F_air = (mass * impactSpeed) / impactTimeAirbag;
-          domVerdictMath.innerHTML = `Waktu benturan <i>t</i> = ${simMotionDuration.toFixed(2)} s | Gaya impuls <i>F</i><sub>peak</sub> = ${(F_air / 1000).toFixed(0)} kN (<i>&Delta;t</i> = ${impactTimeAirbag.toFixed(2)} s)`;
-        }
-
         // Render kurva impuls dengan data tabrakan nyata
         drawImpulseGraph(true);
       } else {
@@ -967,17 +903,6 @@ function updatePhysics() {
         currentSpeed = 0;
         stopEngineSound();
         updateStatusUI("Berhenti Tepat", "var(--success)");
-        if (domVerdictTag) {
-          domVerdictTag.innerHTML = "Berhenti Tepat: <i>s</i> = <i>d</i>";
-          domVerdictTag.style.background = "rgba(16, 185, 129, 0.2)";
-          domVerdictTag.style.color = "#10b981";
-        }
-        if (domVerdictText) {
-          domVerdictText.innerHTML = "Kendaraan berhenti tepat di depan barikade perbaikan jalan tanpa benturan.";
-        }
-        if (domVerdictMath) {
-          domVerdictMath.innerHTML = `Waktu henti <i>t</i> = ${simMotionDuration.toFixed(2)} s | Jarak henti <i>s</i> = ${wallDistance.toFixed(1)} m`;
-        }
       }
     } else if (currentSpeed <= 0.01) {
       // BERHENTI SELAMAT SEBELUM DINDING (s <= d)
@@ -986,17 +911,6 @@ function updatePhysics() {
       stopEngineSound();
       const sisa = (wallDistance - carPosM).toFixed(1);
       updateStatusUI("Berhenti Aman", "var(--success)");
-      if (domVerdictTag) {
-        domVerdictTag.innerHTML = "Berhenti Selamat: <i>s</i> &le; <i>d</i>";
-        domVerdictTag.style.background = "rgba(16, 185, 129, 0.2)";
-        domVerdictTag.style.color = "#10b981";
-      }
-      if (domVerdictText) {
-        domVerdictText.innerHTML = `Kendaraan berhenti selamat dengan sisa jarak &Delta;<i>x</i> = ${sisa} m sebelum barikade perbaikan jalan.`;
-      }
-      if (domVerdictMath) {
-        domVerdictMath.innerHTML = `Waktu henti <i>t</i> = ${simMotionDuration.toFixed(2)} s | Perlambatan <i>a</i> = ${a_brake.toFixed(2)} m/s<sup>2</sup> | Sisa jarak &Delta;<i>x</i> = ${sisa} m`;
-      }
     }
   }
 
