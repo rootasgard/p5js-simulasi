@@ -46,7 +46,7 @@ let streetLights = [];
 
 // ---------- MODEL OBJEK KENDARAAN & EFEK CUACA ----------
 let currentVehicleType = "city"; // "city" | "rain" | "sport" | "truck"
-let domVehicleSelect, domVehicleBadge, domHudVehicleName;
+let domHudVehicleName;
 let rainParticles = [];
 let waterSprayParticles = [];
 let speedTrailParticles = [];
@@ -371,8 +371,6 @@ function setup() {
 // INISIALISASI ELEMEN HTML DOM
 // ============================================================
 function initDOM() {
-  domVehicleSelect = document.getElementById("vehicleSelect");
-  domVehicleBadge = document.getElementById("vehicleBadge");
   domHudVehicleName = document.getElementById("hudVehicleName");
 
   domSpeed = document.getElementById("speedInput");
@@ -572,14 +570,6 @@ function initDOM() {
   if (domBtnRecordTrial) domBtnRecordTrial.addEventListener("click", recordTrial);
   if (domBtnClearTable) domBtnClearTable.addEventListener("click", clearTrialTable);
 
-  // Event listener pemilih model kendaraan
-  if (domVehicleSelect) {
-    domVehicleSelect.addEventListener("change", () => {
-      setVehicleType(domVehicleSelect.value, false);
-      resetSimulation();
-    });
-  }
-
   // Event listener slider
   if (domSpeed) domSpeed.addEventListener("input", onParamChange);
   if (domMass) domMass.addEventListener("input", onParamChange);
@@ -605,7 +595,7 @@ function initDOM() {
     if (d !== undefined) wallDistance = d;
     if (air !== undefined) impactTimeAirbag = air;
     if (type) {
-      setVehicleType(type, true);
+      setVehicleType(type);
     }
     onParamChange();
     resetSimulation();
@@ -615,7 +605,7 @@ function initDOM() {
 // ============================================================
 // PENGATURAN TIPE KENDARAAN & SKENARIO
 // ============================================================
-function setVehicleType(type, updateSelect = true) {
+function setVehicleType(type) {
   currentVehicleType = type;
 
   // Nilai default koefisien gesek sesuai jenis kendaraan / kondisi jalan jika slider disembunyikan
@@ -630,20 +620,14 @@ function setVehicleType(type, updateSelect = true) {
   }
 
   const infoMap = {
-    city: { badge: "Mobil Kota", hud: "Mobil Kota" },
-    rain: { badge: "Sedan Hujan", hud: "Sedan (Jalan Basah)" },
-    sport: { badge: "Supercar Sport", hud: "Supercar Sport" },
-    truck: { badge: "Truk 6 Roda", hud: "Truk Muatan Berat" }
+    city: { hud: "Mobil Kota" },
+    rain: { hud: "Sedan (Jalan Basah)" },
+    sport: { hud: "Supercar Sport" },
+    truck: { hud: "Truk Muatan Berat" }
   };
 
   const info = infoMap[type] || infoMap.city;
 
-  if (updateSelect && domVehicleSelect) {
-    domVehicleSelect.value = type;
-  }
-  if (domVehicleBadge) {
-    domVehicleBadge.textContent = info.badge;
-  }
   if (domHudVehicleName) {
     domHudVehicleName.textContent = info.hud;
   }
